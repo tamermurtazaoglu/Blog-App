@@ -127,6 +127,19 @@ public class PostServiceImpl implements PostService {
     }
 
     /**
+     * Deletes a post by its ID.
+     *
+     * @param id the ID of the post to delete
+     * @throws ResourceNotFoundException if the post is not found
+     */
+    @Override
+    public void deletePost(Long id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id " + id));
+        postRepository.delete(post);
+    }
+
+    /**
      * Retrieves posts by tag name.
      *
      * @param tagName the name of the tag
