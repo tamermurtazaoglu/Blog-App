@@ -59,4 +59,15 @@ public class PostController {
         return ResponseEntity.ok(postDTO);
     }
 
+    /**
+     * Get posts by tag name.
+     *
+     * @param tagName the name of the tag
+     * @return a list of posts with the specified tag name
+     */
+    @GetMapping("/byTag/{tagName}")
+    public ResponseEntity<List<PostSummaryDTO>> getPostsByTag(@PathVariable String tagName) {
+        List<PostSummaryDTO> posts = postService.getPostsByTagName(tagName);
+        return ResponseEntity.ok(posts);
+    }
 }
