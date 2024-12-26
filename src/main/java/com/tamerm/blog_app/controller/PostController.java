@@ -72,6 +72,18 @@ public class PostController {
     }
 
     /**
+     * Delete a post by ID.
+     *
+     * @param id the ID of the post to delete
+     * @return a response entity with no content
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
+        postService.deletePost(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
      * Get posts by tag name.
      *
      * @param tagName the name of the tag
