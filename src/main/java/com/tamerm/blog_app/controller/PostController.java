@@ -3,6 +3,7 @@ package com.tamerm.blog_app.controller;
 import com.tamerm.blog_app.dto.PostDTO;
 import com.tamerm.blog_app.dto.PostSummaryDTO;
 import com.tamerm.blog_app.request.CreatePostRequest;
+import com.tamerm.blog_app.request.UpdatePostRequest;
 import com.tamerm.blog_app.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -44,4 +45,18 @@ public class PostController {
         List<PostSummaryDTO> posts = postService.getAllPosts();
         return ResponseEntity.ok(posts);
     }
+
+    /**
+     * Update an existing post.
+     *
+     * @param id the ID of the post to update
+     * @param request the request object containing updated post details
+     * @return the updated post
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<PostDTO> updatePost(@PathVariable Long id, @Valid @RequestBody UpdatePostRequest request) {
+        PostDTO postDTO = postService.updatePost(id, request);
+        return ResponseEntity.ok(postDTO);
+    }
+
 }

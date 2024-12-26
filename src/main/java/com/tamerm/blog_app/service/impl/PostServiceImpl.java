@@ -3,10 +3,12 @@ package com.tamerm.blog_app.service.impl;
 import com.tamerm.blog_app.dto.PostDTO;
 import com.tamerm.blog_app.dto.PostSummaryDTO;
 import com.tamerm.blog_app.exception.BadRequestException;
+import com.tamerm.blog_app.exception.ResourceNotFoundException;
 import com.tamerm.blog_app.model.Post;
 import com.tamerm.blog_app.model.Tag;
 import com.tamerm.blog_app.repository.PostRepository;
 import com.tamerm.blog_app.request.CreatePostRequest;
+import com.tamerm.blog_app.request.UpdatePostRequest;
 import com.tamerm.blog_app.service.PostService;
 import com.tamerm.blog_app.service.TagService;
 import lombok.RequiredArgsConstructor;
@@ -69,4 +71,44 @@ public class PostServiceImpl implements PostService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Updates an existing post.
+     *
+     * @param id      the ID of the post to update
+     * @param request the request object containing updated post details
+     * @return the updated post
+     * @throws ResourceNotFoundException if the post is not found
+     * @throws BadRequestException       if the post title is empty
+     */
+    @Override
+    public PostDTO updatePost(Long id, UpdatePostRequest request) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
+
+        if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
+            throw new BadRequestException("Post title cannot be empty");
+        }
+
+        modelMapper.typeMap(UpdatePostRequest.class, Post.class)
+                .addMappings(mapper -> mapper.skip(Post::setTags));
+        modelMapper.map(request, post);
+
+        if (request.getTags() != null) {
+            List<String> validTags = request.getTags().stream()
+                    .filter(tagName -> tagName != null && !tagName.trim().isEmpty())
+                    .collect(Collectors.toList());
+            Set<Tag> tags = tagService.getOrCreateTags(validTags);
+            post.setTags(tags);
+        }
+
+        if (post.getTags() != null) {
+            Set<Tag> validTags = post.getTags().stream()
+                    .filter(tag -> tag != null && tag.getName() != null && !tag.getName().trim().isEmpty())
+                    .collect(Collectors.toSet());
+            post.setTags(validTags);
+        }
+
+        Post updatedPost = postRepository.save(post);
+        return modelMapper.map(updatedPost, PostDTO.class);
+    }
 }
