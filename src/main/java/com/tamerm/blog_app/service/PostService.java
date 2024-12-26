@@ -10,6 +10,7 @@ import java.util.List;
 public interface PostService {
     PostDTO createPost(CreatePostRequest request);
     List<PostSummaryDTO> getAllPosts();
+    PostDTO getPostById(Long id);
     PostDTO updatePost(Long id, UpdatePostRequest request);
     List<PostSummaryDTO> getPostsByTagName(String tagName);
 }
