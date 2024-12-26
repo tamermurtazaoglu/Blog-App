@@ -111,4 +111,17 @@ public class PostServiceImpl implements PostService {
         Post updatedPost = postRepository.save(post);
         return modelMapper.map(updatedPost, PostDTO.class);
     }
+
+    /**
+     * Retrieves posts by tag name.
+     *
+     * @param tagName the name of the tag
+     * @return a list of posts with the specified tag name
+     */
+    @Override
+    public List<PostSummaryDTO> getPostsByTagName(String tagName) {
+        return postRepository.findAllByTags_Name(tagName).stream()
+                .map(post -> new PostSummaryDTO(post.getTitle(), post.getText().substring(0, Math.min(post.getText().length(), 50)) + "..."))
+                .collect(Collectors.toList());
+    }
 }

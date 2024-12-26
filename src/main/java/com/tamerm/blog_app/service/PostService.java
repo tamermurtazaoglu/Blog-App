@@ -11,4 +11,5 @@ public interface PostService {
     PostDTO createPost(CreatePostRequest request);
     List<PostSummaryDTO> getAllPosts();
     PostDTO updatePost(Long id, UpdatePostRequest request);
+    List<PostSummaryDTO> getPostsByTagName(String tagName);
 }
