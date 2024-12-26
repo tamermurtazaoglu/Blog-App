@@ -72,6 +72,20 @@ public class PostServiceImpl implements PostService {
     }
 
     /**
+     * Retrieves a post by its ID.
+     *
+     * @param id the ID of the post to retrieve
+     * @return the retrieved post
+     * @throws ResourceNotFoundException if the post is not found
+     */
+    @Override
+    public PostDTO getPostById(Long id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id " + id));
+        return modelMapper.map(post, PostDTO.class);
+    }
+
+    /**
      * Updates an existing post.
      *
      * @param id      the ID of the post to update

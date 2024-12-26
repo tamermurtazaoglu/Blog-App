@@ -47,6 +47,18 @@ public class PostController {
     }
 
     /**
+     * Get a post by ID.
+     *
+     * @param id the ID of the post to retrieve
+     * @return the retrieved post
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<PostDTO> getPostById(@PathVariable Long id) {
+        PostDTO postDTO = postService.getPostById(id);
+        return new ResponseEntity<>(postDTO, HttpStatus.OK);
+    }
+
+    /**
      * Update an existing post.
      *
      * @param id the ID of the post to update
