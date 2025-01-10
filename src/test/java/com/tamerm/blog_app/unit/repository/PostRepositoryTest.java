@@ -1,7 +1,8 @@
-package com.tamerm.blog_app.repository;
+package com.tamerm.blog_app.unit.repository;
 
 import com.tamerm.blog_app.model.Post;
 import com.tamerm.blog_app.model.Tag;
+import com.tamerm.blog_app.repository.PostRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

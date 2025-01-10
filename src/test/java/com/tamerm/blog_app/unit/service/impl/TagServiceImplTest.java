@@ -1,7 +1,8 @@
-package com.tamerm.blog_app.service.impl;
+package com.tamerm.blog_app.unit.service.impl;
 
 import com.tamerm.blog_app.model.Tag;
 import com.tamerm.blog_app.repository.TagRepository;
+import com.tamerm.blog_app.service.impl.TagServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

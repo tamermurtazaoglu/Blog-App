@@ -1,5 +1,8 @@
-package com.tamerm.blog_app.exception;
+package com.tamerm.blog_app.unit.exception;
 
+import com.tamerm.blog_app.exception.BadRequestException;
+import com.tamerm.blog_app.exception.GlobalExceptionHandler;
+import com.tamerm.blog_app.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;

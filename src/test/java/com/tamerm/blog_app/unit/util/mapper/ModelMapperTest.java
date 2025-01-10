@@ -1,4 +1,4 @@
-package com.tamerm.blog_app.util.mapper;
+package com.tamerm.blog_app.unit.util.mapper;
 
 import com.tamerm.blog_app.dto.PostDTO;
 import com.tamerm.blog_app.dto.PostSummaryDTO;

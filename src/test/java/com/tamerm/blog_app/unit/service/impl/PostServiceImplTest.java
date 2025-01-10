@@ -1,4 +1,4 @@
-package com.tamerm.blog_app.service.impl;
+package com.tamerm.blog_app.unit.service.impl;
 
 import com.tamerm.blog_app.dto.PostDTO;
 import com.tamerm.blog_app.dto.PostSummaryDTO;
@@ -10,6 +10,7 @@ import com.tamerm.blog_app.repository.PostRepository;
 import com.tamerm.blog_app.request.CreatePostRequest;
 import com.tamerm.blog_app.request.UpdatePostRequest;
 import com.tamerm.blog_app.service.TagService;
+import com.tamerm.blog_app.service.impl.PostServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
