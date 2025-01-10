@@ -1,5 +1,6 @@
-package com.tamerm.blog_app.controller;
+package com.tamerm.blog_app.unit.controller;
 
+import com.tamerm.blog_app.controller.PostController;
 import com.tamerm.blog_app.dto.PostDTO;
 import com.tamerm.blog_app.dto.PostSummaryDTO;
 import com.tamerm.blog_app.exception.ResourceNotFoundException;
