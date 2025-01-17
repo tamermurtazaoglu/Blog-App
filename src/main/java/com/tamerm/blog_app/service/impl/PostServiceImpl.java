@@ -4,15 +4,19 @@ import com.tamerm.blog_app.dto.PostDTO;
 import com.tamerm.blog_app.dto.PostSummaryDTO;
 import com.tamerm.blog_app.exception.BadRequestException;
 import com.tamerm.blog_app.exception.ResourceNotFoundException;
+import com.tamerm.blog_app.exception.UnauthorizedException;
 import com.tamerm.blog_app.model.Post;
 import com.tamerm.blog_app.model.Tag;
+import com.tamerm.blog_app.model.User;
 import com.tamerm.blog_app.repository.PostRepository;
+import com.tamerm.blog_app.repository.UserRepository;
 import com.tamerm.blog_app.request.CreatePostRequest;
 import com.tamerm.blog_app.request.UpdatePostRequest;
 import com.tamerm.blog_app.service.PostService;
 import com.tamerm.blog_app.service.TagService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,16 +33,19 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final TagService tagService;
     private final ModelMapper modelMapper;
+    private final UserRepository userRepository;
 
     /**
      * Creates a new post.
      *
      * @param request the request object containing post details
+     * @param userId the ID of the user creating the post
      * @return the created post
      * @throws BadRequestException if the post title is empty
+     * @throws ResourceNotFoundException if the user is not found with the given ID
      */
     @Override
-    public PostDTO createPost(CreatePostRequest request) {
+    public PostDTO createPost(CreatePostRequest request, Long userId, UserDetails userDetails) {
         if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
             throw new BadRequestException("Post title cannot be empty");
         }
@@ -49,6 +56,10 @@ public class PostServiceImpl implements PostService {
             Set<Tag> tags = tagService.getOrCreateTags(request.getTags());
             post.setTags(tags);
         }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + userId));
+        post.setUser(user);
 
         Post savedPost = postRepository.save(post);
         return modelMapper.map(savedPost, PostDTO.class);
@@ -127,15 +138,22 @@ public class PostServiceImpl implements PostService {
     }
 
     /**
-     * Deletes a post by its ID.
+     * Deletes a post by its ID and user ID.
      *
-     * @param id the ID of the post to delete
-     * @throws ResourceNotFoundException if the post is not found
+     * @param postId the ID of the post to delete
+     * @param userId the ID of the user who owns the post
+     * @throws ResourceNotFoundException if the post is not found with the given ID
+     * @throws UnauthorizedException if the user is not authorized to delete the post
      */
     @Override
-    public void deletePost(Long id) {
-        Post post = postRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id " + id));
+    public void deletePost(Long postId, Long userId, UserDetails userDetails) {
+        Post post = postRepository.findByIdAndUserId(postId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id " + postId));
+
+        if (!post.getUser().getId().equals(userId)) {
+            throw new UnauthorizedException("User not authorized to delete this post");
+        }
+
         postRepository.delete(post);
     }
 

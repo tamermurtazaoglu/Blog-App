@@ -49,6 +49,22 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles UnauthorizedException.
+     *
+     * @param ex      the exception
+     * @param request the web request
+     * @return a response entity with the error details and UNAUTHORIZED status
+     */
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<?> handleUnauthorizedException(UnauthorizedException ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", System.currentTimeMillis());
+        body.put("message", ex.getMessage());
+        body.put("details", request.getDescription(false));
+        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
+    }
+
+    /**
      * Handles all other exceptions.
      *
      * @param ex      the exception

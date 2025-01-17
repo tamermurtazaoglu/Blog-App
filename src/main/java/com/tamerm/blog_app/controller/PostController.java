@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,11 +29,12 @@ public class PostController {
      * Create a new post.
      *
      * @param request the request object containing post details
+     * @param userId the ID of the user creating the post
      * @return the created post
      */
     @PostMapping
-    public ResponseEntity<PostDTO> createPost(@Valid @RequestBody CreatePostRequest request) {
-        PostDTO createdPost = postService.createPost(request);
+    public ResponseEntity<PostDTO> createPost(@Valid @RequestBody CreatePostRequest request, @RequestParam Long userId, @AuthenticationPrincipal UserDetails userDetails) {
+        PostDTO createdPost = postService.createPost(request, userId, userDetails);
         return new ResponseEntity<>(createdPost, HttpStatus.CREATED);
     }
 
@@ -74,12 +77,13 @@ public class PostController {
     /**
      * Delete a post by ID.
      *
-     * @param id the ID of the post to delete
+     * @param postId the ID of the post to delete
+     * @param userId the ID of the user who owns the post
      * @return a response entity with no content
      */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
-        postService.deletePost(id);
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<Void> deletePost(@PathVariable Long postId, @RequestParam Long userId, @AuthenticationPrincipal UserDetails userDetails) {
+        postService.deletePost(postId, userId, userDetails);
         return ResponseEntity.noContent().build();
     }
 
