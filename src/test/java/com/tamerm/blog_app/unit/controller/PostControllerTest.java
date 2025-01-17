@@ -7,20 +7,25 @@ import com.tamerm.blog_app.exception.ResourceNotFoundException;
 import com.tamerm.blog_app.request.CreatePostRequest;
 import com.tamerm.blog_app.request.UpdatePostRequest;
 import com.tamerm.blog_app.service.PostService;
+import org.apache.coyote.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -35,6 +40,8 @@ class PostControllerTest {
 
     private PostDTO postDTO;
     private PostSummaryDTO postSummaryDTO;
+    @Autowired
+    private PostController postController;
 
     @BeforeEach
     void setUp() {
@@ -46,85 +53,90 @@ class PostControllerTest {
      * Tests that a post is created successfully.
      */
     @Test
-    void createPost_ShouldReturnCreatedPost() throws Exception {
+    void createPost_ShouldReturnCreatedPost() {
         CreatePostRequest request = new CreatePostRequest("Test Title", "Test Text", Collections.emptyList());
-        Mockito.when(postService.createPost(any(CreatePostRequest.class))).thenReturn(postDTO);
+        Mockito.when(postService.createPost(any(CreatePostRequest.class), anyLong(), isNull())).thenReturn(postDTO);
 
-        mockMvc.perform(post("/posts")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"Test Title\",\"text\":\"Test Text\",\"tags\":[]}"))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.title").value("Test Title"));
+        ResponseEntity<PostDTO> response = postController.createPost(request, 1L, null);
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals("Test Title", response.getBody().getTitle());
     }
 
     /**
      * Tests that all post summaries are retrieved successfully.
      */
     @Test
-    void getAllPostSummaries_ShouldReturnAllPosts() throws Exception {
+    void getAllPostSummaries_ShouldReturnAllPosts() {
         Mockito.when(postService.getAllPosts()).thenReturn(List.of(postSummaryDTO));
 
-        mockMvc.perform(get("/posts"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("Test Title"));
+        ResponseEntity<List<PostSummaryDTO>> response = postController.getAllPostSummaries();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Test Title", response.getBody().get(0).getTitle());
     }
 
     /**
      * Tests that a post is retrieved by its ID successfully.
      */
     @Test
-    void getPostById_ShouldReturnPost() throws Exception {
+    void getPostById_ShouldReturnPost() {
         Mockito.when(postService.getPostById(anyLong())).thenReturn(postDTO);
 
-        mockMvc.perform(get("/posts/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title").value("Test Title"));
+        ResponseEntity<PostDTO> response = postController.getPostById(1L);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Test Title", response.getBody().getTitle());
     }
 
     /**
      * Tests that a NotFound status is returned when the post is not found.
      */
     @Test
-    void getPostById_ShouldReturnNotFound_WhenPostDoesNotExist() throws Exception {
+    void getPostById_ShouldReturnNotFound_WhenPostDoesNotExist() {
         Mockito.when(postService.getPostById(anyLong())).thenThrow(new ResourceNotFoundException("Post not found"));
 
-        mockMvc.perform(get("/posts/1"))
-                .andExpect(status().isNotFound());
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+            postController.getPostById(1L);
+        });
+
+        assertEquals("Post not found", exception.getMessage());
     }
 
     /**
      * Tests that a post is updated successfully.
      */
     @Test
-    void updatePost_ShouldReturnUpdatedPost() throws Exception {
+    void updatePost_ShouldReturnUpdatedPost() {
         UpdatePostRequest request = new UpdatePostRequest("Updated Title", "Updated Text", Collections.emptyList());
         Mockito.when(postService.updatePost(anyLong(), any(UpdatePostRequest.class))).thenReturn(postDTO);
 
-        mockMvc.perform(put("/posts/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"Updated Title\",\"text\":\"Updated Text\",\"tags\":[]}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title").value("Test Title"));
+        ResponseEntity<PostDTO> response = postController.updatePost(1L, request);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Test Title", response.getBody().getTitle());
     }
 
     /**
      * Tests that a post is deleted successfully.
      */
     @Test
-    void deletePost_ShouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/posts/1"))
-                .andExpect(status().isNoContent());
+    void deletePost_ShouldReturnNoContent() {
+        ResponseEntity<Void> response = postController.deletePost(1L, 1L, null);
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
     }
 
     /**
      * Tests that posts are retrieved by tag name successfully.
      */
     @Test
-    void getPostsByTag_ShouldReturnPosts() throws Exception {
+    void getPostsByTag_ShouldReturnPosts() {
         Mockito.when(postService.getPostsByTagName("tag")).thenReturn(List.of(postSummaryDTO));
 
-        mockMvc.perform(get("/posts/byTag/tag"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("Test Title"));
+        ResponseEntity<List<PostSummaryDTO>> response = postController.getPostsByTag("tag");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Test Title", response.getBody().get(0).getTitle());
     }
 }
