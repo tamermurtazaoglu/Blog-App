@@ -8,4 +8,6 @@ import com.tamerm.blog_app.model.User;
 public interface JWTService {
     String generateToken(User user);
     boolean validateToken(String token);
+    String getUsernameFromToken(String token);
+    boolean hasActiveToken();
 }
