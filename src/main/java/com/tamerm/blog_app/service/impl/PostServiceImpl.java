@@ -142,12 +142,13 @@ public class PostServiceImpl implements PostService {
      *
      * @param postId the ID of the post to delete
      * @param userId the ID of the user who owns the post
+     * @param userDetails the details of the authenticated user
      * @throws ResourceNotFoundException if the post is not found with the given ID
      * @throws UnauthorizedException if the user is not authorized to delete the post
      */
     @Override
     public void deletePost(Long postId, Long userId, UserDetails userDetails) {
-        Post post = postRepository.findByIdAndUserId(postId, userId)
+        Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id " + postId));
 
         if (!post.getUser().getId().equals(userId)) {

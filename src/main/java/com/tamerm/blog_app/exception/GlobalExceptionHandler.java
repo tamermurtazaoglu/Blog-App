@@ -65,6 +65,38 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles UserAlreadyLoggedInException.
+     *
+     * @param ex      the exception
+     * @param request the web request
+     * @return a response entity with the error details and CONFLICT status
+     */
+    @ExceptionHandler(UserAlreadyLoggedInException.class)
+    public ResponseEntity<?> handleUserAlreadyLoggedInException(UserAlreadyLoggedInException ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", System.currentTimeMillis());
+        body.put("message", ex.getMessage());
+        body.put("details", request.getDescription(false));
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
+    /**
+     * Handles InvalidCredentialsException.
+     *
+     * @param ex      the exception
+     * @param request the web request
+     * @return a response entity with the error details and UNAUTHORIZED status
+     */
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<?> handleInvalidCredentialsException(InvalidCredentialsException ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", System.currentTimeMillis());
+        body.put("message", ex.getMessage());
+        body.put("details", request.getDescription(false));
+        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
+    }
+
+    /**
      * Handles all other exceptions.
      *
      * @param ex      the exception
