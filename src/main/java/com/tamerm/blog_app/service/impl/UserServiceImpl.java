@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service implementation for managing users.
@@ -33,6 +34,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      * @param request the request containing user details
      * @return the created UserDTO
      */
+    @Transactional
     @Override
     public UserDTO createUser(CreateUserRequest request) {
         User user = new User();
@@ -56,6 +58,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      * @throws UserAlreadyLoggedInException if the user is already logged in
      * @throws InvalidCredentialsException  if the provided credentials are invalid
      */
+    @Transactional
     @Override
     public String login(LoginRequest request) {
         if (jwtService.hasActiveToken()) {

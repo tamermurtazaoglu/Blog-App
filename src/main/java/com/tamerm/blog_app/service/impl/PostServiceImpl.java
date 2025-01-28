@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
@@ -44,6 +45,7 @@ public class PostServiceImpl implements PostService {
      * @throws BadRequestException if the post title is empty
      * @throws ResourceNotFoundException if the user is not found with the given ID
      */
+    @Transactional
     @Override
     public PostDTO createPost(CreatePostRequest request, Long userId, UserDetails userDetails) {
         if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
@@ -105,6 +107,7 @@ public class PostServiceImpl implements PostService {
      * @throws ResourceNotFoundException if the post is not found
      * @throws BadRequestException       if the post title is empty
      */
+    @Transactional
     @Override
     public PostDTO updatePost(Long id, UpdatePostRequest request) {
         Post post = postRepository.findById(id)
@@ -146,6 +149,7 @@ public class PostServiceImpl implements PostService {
      * @throws ResourceNotFoundException if the post is not found with the given ID
      * @throws UnauthorizedException if the user is not authorized to delete the post
      */
+    @Transactional
     @Override
     public void deletePost(Long postId, Long userId, UserDetails userDetails) {
         Post post = postRepository.findById(postId)
