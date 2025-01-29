@@ -10,6 +10,7 @@ import com.tamerm.blog_app.request.LoginRequest;
 import com.tamerm.blog_app.security.JWTService;
 import com.tamerm.blog_app.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository userRepository;
@@ -37,6 +39,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Transactional
     @Override
     public UserDTO createUser(CreateUserRequest request) {
+        log.debug("Creating user with username: {}", request.getUsername());
         User user = new User();
         user.setUsername(request.getUsername());
         user.setPassword(new BCryptPasswordEncoder().encode(request.getPassword()));
@@ -47,6 +50,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         userDTO.setId(savedUser.getId());
         userDTO.setUsername(savedUser.getUsername());
         userDTO.setDisplayName(savedUser.getDisplayName());
+        log.info("User created successfully with id: {}", savedUser.getId());
         return userDTO;
     }
 
@@ -61,7 +65,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Transactional
     @Override
     public String login(LoginRequest request) {
+        log.debug("Authenticating user with username: {}", request.getUsername());
         if (jwtService.hasActiveToken()) {
+            log.error("User is already logged in with an active token");
             throw new UserAlreadyLoggedInException("User is already logged in with an active token");
         }
 
@@ -69,8 +75,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
 
         if (new BCryptPasswordEncoder().matches(request.getPassword(), user.getPassword())) {
-            return jwtService.generateToken(user);
+            String token = jwtService.generateToken(user);
+            log.info("User authenticated successfully with username: {}", request.getUsername());
+            return token;
         } else {
+            log.error("Invalid username or password for username: {}", request.getUsername());
             throw new InvalidCredentialsException("Invalid username or password");
         }
     }
@@ -82,10 +91,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      */
     @Override
     public void logout() {
+        log.debug("Logging out current user");
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            log.error("No user is currently logged in.");
             throw new RuntimeException("No user is currently logged in.");
         }
         SecurityContextHolder.clearContext();
+        log.info("User logged out successfully");
     }
 
     /**
@@ -97,6 +109,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        log.debug("Loading user by username: {}", username);
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }

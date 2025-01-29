@@ -5,6 +5,7 @@ import com.tamerm.blog_app.model.Tag;
 import com.tamerm.blog_app.repository.TagRepository;
 import com.tamerm.blog_app.service.TagService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TagServiceImpl implements TagService {
 
     private final TagRepository tagRepository;
@@ -31,15 +33,22 @@ public class TagServiceImpl implements TagService {
     @Transactional
     @Override
     public Set<Tag> getOrCreateTags(List<String> tagNames) {
+        log.debug("Retrieving or creating tags for tag names: {}", tagNames);
         if (tagNames == null || tagNames.isEmpty()) {
+            log.error("Tag names cannot be null or empty");
             throw new BadRequestException("Tag names cannot be null or empty");
         }
 
-        return tagNames.stream()
+        Set<Tag> tags = tagNames.stream()
                 .filter(tagName -> tagName != null && !tagName.trim().isEmpty())
                 .map(tagName -> tagRepository.findByName(tagName)
-                        .orElseGet(() -> tagRepository.save(new Tag(tagName))))
+                        .orElseGet(() -> {
+                            log.debug("Creating new tag with name: {}", tagName);
+                            return tagRepository.save(new Tag(tagName));
+                        }))
                 .collect(Collectors.toSet());
-    }
 
+        log.info("Tags retrieved or created successfully: {}", tags);
+        return tags;
+    }
 }
