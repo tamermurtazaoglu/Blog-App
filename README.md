@@ -9,7 +9,7 @@ features such as microservices and cloud deployment.
 
 ## Structure
 
-![uml_diagram.png](uml_diagram.png)
+![uml_diagram.png](uml_diagram_v2.png)
 
 ## Released Versions
 
@@ -23,8 +23,6 @@ features such as microservices and cloud deployment.
 - Use H2 database for initial data setup.
 - Write unit and integration tests.
 
-## Planned Versions
-
 ### Version 0.2.0
 
 - Add user management functionality.
@@ -35,6 +33,8 @@ features such as microservices and cloud deployment.
 - Implement logging using Logback.
 - Migrate the database to MySQL.
 - Dockerize the application.
+
+## Planned Versions
 
 ### Version 0.3.0
 
@@ -51,17 +51,39 @@ features such as microservices and cloud deployment.
 
 ## Setup Instructions
 
-1. Clone the repository:
+1. **Clone the repository**
    ```bash
    git clone https://github.com/tamermurtazaoglu/Blog-App.git
    ```
-2. Navigate to the project directory:
+
+2. **Navigate to the project directory**
    ```bash
    cd Blog-App
    ```
-3. Run the application:
+
+3. **Set up the database**
+   - **For H2 (default for development)**: No additional setup is required.
+   - **For MySQL (production)**: Ensure you have MySQL installed and running. Update the `application.properties` file with your MySQL database credentials.
+
+
+4. **Run the application**
    ```bash
    mvn spring-boot:run
+   ```
+
+5. **Run the tests**
+   ```bash
+   mvn test
+   ```
+
+6. **(Optional) Build the Docker image**
+   ```bash
+   docker build -t blog-app .
+   ```
+
+7. **(Optional) Run the application using Docker**
+   ```bash
+   docker-compose -f src/main/resources/docker-compose.yml up
    ```
 
 ## Technical Features
