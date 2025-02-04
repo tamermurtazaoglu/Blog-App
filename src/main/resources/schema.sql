@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS tags (
 CREATE TABLE IF NOT EXISTS post_tags (
                            post_id BIGINT NOT NULL,
                            tag_id BIGINT NOT NULL,
-                           PRIMARY KEY (post_id, tag_id),
+                           id BIGINT AUTO_INCREMENT PRIMARY KEY,
                            FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
                            FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 );

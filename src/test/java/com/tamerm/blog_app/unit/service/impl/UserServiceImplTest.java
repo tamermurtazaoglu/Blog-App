@@ -87,7 +87,7 @@ public class UserServiceImplTest {
 
         assertNotNull(result);
         assertEquals("jwt-token", result);
-        verify(userRepository, times(1)).findByUsername(any(String.class));
+        verify(userRepository, times(2)).findByUsername(any(String.class));
         verify(jwtService, times(1)).generateToken(any(User.class));
     }
 
@@ -108,6 +108,16 @@ public class UserServiceImplTest {
      */
     @Test
     void logout_ShouldClearSecurityContext() {
+        when(userRepository.save(any(User.class))).thenReturn(user);
+        when(userRepository.findByUsername(any(String.class))).thenReturn(Optional.of(user));
+        when(jwtService.generateToken(any(User.class))).thenReturn("jwt-token");
+
+        CreateUserRequest createUserRequest = new CreateUserRequest("testuser", "password", "Test User");
+        userService.createUser(createUserRequest);
+
+        LoginRequest loginRequest = new LoginRequest("testuser", "password");
+        String jwt = userService.login(loginRequest);
+
         userService.logout();
 
         assertNull(SecurityContextHolder.getContext().getAuthentication());

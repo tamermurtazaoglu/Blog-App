@@ -198,7 +198,7 @@ class PostServiceImplTest {
      */
     @Test
     void deletePost_ShouldDeletePost_WhenPostExists() {
-        when(postRepository.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(post));
+        when(postRepository.findById(1L)).thenReturn(Optional.of(post));
 
         postService.deletePost(1L, 1L, null);
 

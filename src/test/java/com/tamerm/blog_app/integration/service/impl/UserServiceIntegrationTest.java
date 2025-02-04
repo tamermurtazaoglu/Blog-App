@@ -64,6 +64,12 @@ public class UserServiceIntegrationTest {
     @Test
     @Transactional
     void testLogout() {
+        CreateUserRequest createUserRequest = new CreateUserRequest("testuser", "password", "Test User");
+        userService.createUser(createUserRequest);
+
+        LoginRequest loginRequest = new LoginRequest("testuser", "password");
+        String jwt = userService.login(loginRequest);
+
         userService.logout();
         assertNull(SecurityContextHolder.getContext().getAuthentication());
     }

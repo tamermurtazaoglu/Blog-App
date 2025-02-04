@@ -11,6 +11,7 @@ import com.tamerm.blog_app.security.JWTService;
 import com.tamerm.blog_app.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -77,6 +78,12 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         if (new BCryptPasswordEncoder().matches(request.getPassword(), user.getPassword())) {
             String token = jwtService.generateToken(user);
             log.info("User authenticated successfully with username: {}", request.getUsername());
+
+            // Manually set the authentication in the SecurityContextHolder
+            UserDetails userDetails = loadUserByUsername(request.getUsername());
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
             return token;
         } else {
             log.error("Invalid username or password for username: {}", request.getUsername());
