@@ -3,6 +3,7 @@ package com.tamerm.blog_app.unit.exception;
 import com.tamerm.blog_app.exception.BadRequestException;
 import com.tamerm.blog_app.exception.GlobalExceptionHandler;
 import com.tamerm.blog_app.exception.ResourceNotFoundException;
+import com.tamerm.blog_app.exception.UnauthorizedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -64,6 +65,25 @@ class GlobalExceptionHandlerTest {
         Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
         expectedBody.put("timestamp", responseBody.get("timestamp"));
         expectedBody.put("message", "Bad request");
+        expectedBody.put("details", "uri=/test");
+        assertEquals(expectedBody, response.getBody());
+    }
+
+    /**
+     * Tests handling of UnauthorizedException.
+     */
+    @Test
+    void handleUnauthorizedException_ShouldReturnUnauthorizedResponse() {
+        UnauthorizedException ex = new UnauthorizedException("Unauthorized access");
+        when(webRequest.getDescription(false)).thenReturn("uri=/test");
+
+        ResponseEntity<?> response = globalExceptionHandler.handleUnauthorizedException(ex, webRequest);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        Map<String, Object> expectedBody = new HashMap<>();
+        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        expectedBody.put("timestamp", responseBody.get("timestamp"));
+        expectedBody.put("message", "Unauthorized access");
         expectedBody.put("details", "uri=/test");
         assertEquals(expectedBody, response.getBody());
     }

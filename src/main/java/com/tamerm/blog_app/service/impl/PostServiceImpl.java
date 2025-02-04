@@ -4,16 +4,22 @@ import com.tamerm.blog_app.dto.PostDTO;
 import com.tamerm.blog_app.dto.PostSummaryDTO;
 import com.tamerm.blog_app.exception.BadRequestException;
 import com.tamerm.blog_app.exception.ResourceNotFoundException;
+import com.tamerm.blog_app.exception.UnauthorizedException;
 import com.tamerm.blog_app.model.Post;
 import com.tamerm.blog_app.model.Tag;
+import com.tamerm.blog_app.model.User;
 import com.tamerm.blog_app.repository.PostRepository;
+import com.tamerm.blog_app.repository.UserRepository;
 import com.tamerm.blog_app.request.CreatePostRequest;
 import com.tamerm.blog_app.request.UpdatePostRequest;
 import com.tamerm.blog_app.service.PostService;
 import com.tamerm.blog_app.service.TagService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
@@ -24,22 +30,29 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
     private final TagService tagService;
     private final ModelMapper modelMapper;
+    private final UserRepository userRepository;
 
     /**
      * Creates a new post.
      *
      * @param request the request object containing post details
+     * @param userId the ID of the user creating the post
      * @return the created post
      * @throws BadRequestException if the post title is empty
+     * @throws ResourceNotFoundException if the user is not found with the given ID
      */
+    @Transactional
     @Override
-    public PostDTO createPost(CreatePostRequest request) {
+    public PostDTO createPost(CreatePostRequest request, Long userId, UserDetails userDetails) {
+        log.debug("Creating post for userId: {}", userId);
         if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
+            log.error("Post title cannot be empty");
             throw new BadRequestException("Post title cannot be empty");
         }
 
@@ -50,7 +63,12 @@ public class PostServiceImpl implements PostService {
             post.setTags(tags);
         }
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + userId));
+        post.setUser(user);
+
         Post savedPost = postRepository.save(post);
+        log.info("Post created successfully with id: {}", savedPost.getId());
         return modelMapper.map(savedPost, PostDTO.class);
     }
 
@@ -61,6 +79,7 @@ public class PostServiceImpl implements PostService {
      */
     @Override
     public List<PostSummaryDTO> getAllPosts() {
+        log.debug("Retrieving all posts");
         return postRepository.findAll().stream()
                 .map(post -> new PostSummaryDTO(
                         post.getTitle(),
@@ -80,8 +99,10 @@ public class PostServiceImpl implements PostService {
      */
     @Override
     public PostDTO getPostById(Long id) {
+        log.debug("Retrieving post with id: {}", id);
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id " + id));
+        log.info("Post retrieved successfully with id: {}", id);
         return modelMapper.map(post, PostDTO.class);
     }
 
@@ -94,12 +115,15 @@ public class PostServiceImpl implements PostService {
      * @throws ResourceNotFoundException if the post is not found
      * @throws BadRequestException       if the post title is empty
      */
+    @Transactional
     @Override
     public PostDTO updatePost(Long id, UpdatePostRequest request) {
+        log.debug("Updating post with id: {}", id);
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
 
         if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
+            log.error("Post title cannot be empty");
             throw new BadRequestException("Post title cannot be empty");
         }
 
@@ -123,20 +147,33 @@ public class PostServiceImpl implements PostService {
         }
 
         Post updatedPost = postRepository.save(post);
+        log.info("Post updated successfully with id: {}", updatedPost.getId());
         return modelMapper.map(updatedPost, PostDTO.class);
     }
 
     /**
-     * Deletes a post by its ID.
+     * Deletes a post by its ID and user ID.
      *
-     * @param id the ID of the post to delete
-     * @throws ResourceNotFoundException if the post is not found
+     * @param postId the ID of the post to delete
+     * @param userId the ID of the user who owns the post
+     * @param userDetails the details of the authenticated user
+     * @throws ResourceNotFoundException if the post is not found with the given ID
+     * @throws UnauthorizedException if the user is not authorized to delete the post
      */
+    @Transactional
     @Override
-    public void deletePost(Long id) {
-        Post post = postRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id " + id));
+    public void deletePost(Long postId, Long userId, UserDetails userDetails) {
+        log.debug("Deleting post with id: {}", postId);
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id " + postId));
+
+        if (!post.getUser().getId().equals(userId)) {
+            log.error("User not authorized to delete this post");
+            throw new UnauthorizedException("User not authorized to delete this post");
+        }
+
         postRepository.delete(post);
+        log.info("Post deleted successfully with id: {}", postId);
     }
 
     /**
@@ -147,6 +184,7 @@ public class PostServiceImpl implements PostService {
      */
     @Override
     public List<PostSummaryDTO> getPostsByTagName(String tagName) {
+        log.debug("Retrieving posts with tag: {}", tagName);
         return postRepository.findAllByTags_Name(tagName).stream()
                 .map(post -> new PostSummaryDTO(post.getTitle(), post.getText().substring(0, Math.min(post.getText().length(), 50)) + "..."))
                 .collect(Collectors.toList());
