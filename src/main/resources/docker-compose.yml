@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  app:
+    container_name: blog-app
+    build:
+      context: ../../..
+      dockerfile: Dockerfile
+    image: myblogapp:latest
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/blog_app
+      SPRING_DATASOURCE_USERNAME: tamerm
+      SPRING_DATASOURCE_PASSWORD: tamerm
+      SPRING_PROFILES_ACTIVE: prod
+    ports:
+      - "8080:8080"
+  db:
+    image: mysql:9.2.0
+    container_name: blog-app-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: demo
+      MYSQL_DATABASE: blog_app
+      MYSQL_USER: tamerm
+      MYSQL_PASSWORD: tamerm
+    ports:
+      - "3307:3306"

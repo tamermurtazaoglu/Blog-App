@@ -3,23 +3,27 @@ package com.tamerm.blog_app.integration.controller;
 import com.tamerm.blog_app.BlogApplication;
 import com.tamerm.blog_app.request.CreatePostRequest;
 import com.tamerm.blog_app.request.UpdatePostRequest;
+import com.tamerm.blog_app.security.SecurityConfigTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Integration tests for the PostController.
  */
 @SpringBootTest(classes = BlogApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
+@Import(SecurityConfigTest.class)
 public class PostControllerIntegrationTest {
 
     @Autowired
@@ -33,7 +37,7 @@ public class PostControllerIntegrationTest {
     void createPost_ShouldReturnCreatedPost() throws Exception {
         CreatePostRequest request = new CreatePostRequest("Integration Test Title", "Integration Test Text", Collections.singletonList("TestTag"));
 
-        mockMvc.perform(post("/posts")
+        mockMvc.perform(post("/posts?userId=1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"Integration Test Title\",\"text\":\"Integration Test Text\",\"tags\":[\"TestTag\"]}"))
                 .andExpect(status().isCreated())
@@ -83,7 +87,7 @@ public class PostControllerIntegrationTest {
      */
     @Test
     void deletePost_ShouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/posts/1"))
+        mockMvc.perform(delete("/posts/1?userId=1"))
                 .andExpect(status().isNoContent());
     }
 }

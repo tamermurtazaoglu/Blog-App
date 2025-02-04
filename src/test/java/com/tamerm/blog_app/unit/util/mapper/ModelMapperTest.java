@@ -3,6 +3,7 @@ package com.tamerm.blog_app.unit.util.mapper;
 import com.tamerm.blog_app.dto.PostDTO;
 import com.tamerm.blog_app.dto.PostSummaryDTO;
 import com.tamerm.blog_app.model.Post;
+import com.tamerm.blog_app.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
@@ -18,10 +19,17 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class ModelMapperTest {
 
     private ModelMapper modelMapper;
+    private User user;
 
     @BeforeEach
     void setUp() {
         modelMapper = new ModelMapper();
+        user = User.builder()
+                .id(1L)
+                .username("testuser")
+                .password("password")
+                .displayName("Test user")
+                .build();
     }
 
     /**
@@ -29,7 +37,7 @@ class ModelMapperTest {
      */
     @Test
     void testMapPostToPostDTO() {
-        Post post = new Post(1L, "Test Title", "Test Content", new HashSet<>());
+        Post post = new Post(1L, "Test Title", "Test Content", user, new HashSet<>());
 
         PostDTO postDTO = modelMapper.map(post, PostDTO.class);
 
@@ -47,6 +55,7 @@ class ModelMapperTest {
         PostDTO postDTO = new PostDTO(1L, "Test Title", "Test Content", new HashSet<>());
 
         Post post = modelMapper.map(postDTO, Post.class);
+        post.setUser(user); // Set the user manually
 
         assertEquals(postDTO.getId(), post.getId());
         assertEquals(postDTO.getTitle(), post.getTitle());
@@ -59,7 +68,7 @@ class ModelMapperTest {
      */
     @Test
     void testMapPostToPostSummaryDTO() {
-        Post post = new Post(1L, "Test Title", "Test Content", new HashSet<>());
+        Post post = new Post(1L, "Test Title", "Test Content", user, new HashSet<>());
 
         PostSummaryDTO postSummaryDTO = modelMapper.map(post, PostSummaryDTO.class);
 
@@ -75,6 +84,7 @@ class ModelMapperTest {
         PostSummaryDTO postSummaryDTO = new PostSummaryDTO("Test Title", "Test Content");
 
         Post post = modelMapper.map(postSummaryDTO, Post.class);
+        post.setUser(user); // Set the user manually
 
         assertEquals(postSummaryDTO.getTitle(), post.getTitle());
         assertEquals(postSummaryDTO.getText(), post.getText());
@@ -85,7 +95,7 @@ class ModelMapperTest {
      */
     @Test
     void testMapPostWithNullValues() {
-        Post post = new Post(1L, null, null, null);
+        Post post = new Post(1L, null, null, user, null);
 
         PostDTO postDTO = modelMapper.map(post, PostDTO.class);
 
