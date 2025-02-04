@@ -1,11 +1,14 @@
 package com.tamerm.blog_app.integration.repository;
 
+import com.tamerm.blog_app.TestContainersConfig;
 import com.tamerm.blog_app.model.User;
 import com.tamerm.blog_app.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -13,6 +16,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @ActiveProfiles("test")
+@ContextConfiguration(classes = TestContainersConfig.class)
+@Transactional
 public class UserRepositoryIntegrationTest {
 
     @Autowired

@@ -6,6 +6,7 @@ import com.tamerm.blog_app.service.TagService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Integration tests for the TagService.
  */
 @SpringBootTest(classes = BlogApplication.class)
+@ActiveProfiles("test")
 @Transactional
 public class TagServiceIntegrationTest {
 

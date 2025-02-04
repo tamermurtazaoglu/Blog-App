@@ -1,11 +1,13 @@
 package com.tamerm.blog_app.integration.repository;
 
 import com.tamerm.blog_app.BlogApplication;
+import com.tamerm.blog_app.TestContainersConfig;
 import com.tamerm.blog_app.model.Tag;
 import com.tamerm.blog_app.repository.TagRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
@@ -16,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Integration tests for the TagRepository.
  */
 @SpringBootTest(classes = BlogApplication.class)
+@ContextConfiguration(classes = TestContainersConfig.class)
 @Transactional
 public class TagRepositoryIntegrationTest {
 

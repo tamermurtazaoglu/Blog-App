@@ -4,16 +4,13 @@ import com.tamerm.blog_app.request.CreateUserRequest;
 import com.tamerm.blog_app.request.LoginRequest;
 import com.tamerm.blog_app.security.JWTService;
 import com.tamerm.blog_app.service.UserService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.devtools.classpath.ClassPathFileSystemWatcher;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -42,10 +39,9 @@ public class UserControllerIntegrationTest {
         String password = "password6";
         CreateUserRequest request = new CreateUserRequest(username, password, "New User");
 
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/users/create")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"" + username + "\",\"password\":\"password6\",\"displayName\":\"New User\"}")
-                        .header("Authorization", "Bearer " + jwtToken))
+                        .content("{\"username\":\"" + username + "\",\"password\":\"password6\",\"displayName\":\"New User\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.username", is(username)))
                 .andExpect(jsonPath("$.displayName", is("New User")));
