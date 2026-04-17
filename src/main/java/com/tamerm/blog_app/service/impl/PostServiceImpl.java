@@ -116,10 +116,16 @@ public class PostServiceImpl implements PostService {
      */
     @Transactional
     @Override
-    public PostDTO updatePost(Long id, UpdatePostRequest request) {
+    public PostDTO updatePost(Long id, UpdatePostRequest request, UserDetails userDetails) {
+        User user = (User) userDetails;
         log.debug("Updating post with id: {}", id);
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
+
+        if (!post.getUser().getId().equals(user.getId())) {
+            log.error("User not authorized to update this post");
+            throw new UnauthorizedException("User not authorized to update this post");
+        }
 
         if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
             log.error("Post title cannot be empty");

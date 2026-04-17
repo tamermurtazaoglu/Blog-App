@@ -109,9 +109,9 @@ class PostControllerTest {
     @Test
     void updatePost_ShouldReturnUpdatedPost() {
         UpdatePostRequest request = new UpdatePostRequest("Updated Title", "Updated Text", Collections.emptyList());
-        Mockito.when(postService.updatePost(anyLong(), any(UpdatePostRequest.class))).thenReturn(postDTO);
+        Mockito.when(postService.updatePost(anyLong(), any(UpdatePostRequest.class), isNull())).thenReturn(postDTO);
 
-        ResponseEntity<PostDTO> response = postController.updatePost(1L, request);
+        ResponseEntity<PostDTO> response = postController.updatePost(1L, request, null);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Test Title", response.getBody().getTitle());

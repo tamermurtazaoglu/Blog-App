@@ -12,7 +12,7 @@ public interface PostService {
     PostDTO createPost(CreatePostRequest request, UserDetails userDetails);
     List<PostSummaryDTO> getAllPosts();
     PostDTO getPostById(Long id);
-    PostDTO updatePost(Long id, UpdatePostRequest request);
+    PostDTO updatePost(Long id, UpdatePostRequest request, UserDetails userDetails);
     void deletePost(Long postId, UserDetails userDetails);
     List<PostSummaryDTO> getPostsByTagName(String tagName);
 }
