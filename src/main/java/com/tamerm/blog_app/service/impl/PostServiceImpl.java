@@ -9,7 +9,6 @@ import com.tamerm.blog_app.model.Post;
 import com.tamerm.blog_app.model.Tag;
 import com.tamerm.blog_app.model.User;
 import com.tamerm.blog_app.repository.PostRepository;
-import com.tamerm.blog_app.repository.UserRepository;
 import com.tamerm.blog_app.request.CreatePostRequest;
 import com.tamerm.blog_app.request.UpdatePostRequest;
 import com.tamerm.blog_app.service.PostService;
@@ -36,7 +35,6 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final TagService tagService;
     private final ModelMapper modelMapper;
-    private final UserRepository userRepository;
 
     /**
      * Creates a new post.
@@ -132,8 +130,6 @@ public class PostServiceImpl implements PostService {
             throw new BadRequestException("Post title cannot be empty");
         }
 
-        modelMapper.typeMap(UpdatePostRequest.class, Post.class)
-                .addMappings(mapper -> mapper.skip(Post::setTags));
         modelMapper.map(request, post);
 
         if (request.getTags() != null) {
