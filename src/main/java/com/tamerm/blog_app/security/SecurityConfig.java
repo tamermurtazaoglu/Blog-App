@@ -16,10 +16,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JWTServiceImpl jwtService;
+    private final JWTService jwtService;
     private final UserDetailsService userDetailsService;
 
-    public SecurityConfig(JWTServiceImpl jwtService, UserDetailsService userDetailsService) {
+    public SecurityConfig(JWTService jwtService, UserDetailsService userDetailsService) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
     }
