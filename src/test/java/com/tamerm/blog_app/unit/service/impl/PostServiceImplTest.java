@@ -9,7 +9,6 @@ import com.tamerm.blog_app.model.Post;
 import com.tamerm.blog_app.model.Tag;
 import com.tamerm.blog_app.model.User;
 import com.tamerm.blog_app.repository.PostRepository;
-import com.tamerm.blog_app.repository.UserRepository;
 import com.tamerm.blog_app.request.CreatePostRequest;
 import com.tamerm.blog_app.request.UpdatePostRequest;
 import com.tamerm.blog_app.service.TagService;
@@ -40,9 +39,6 @@ class PostServiceImplTest {
 
     @Mock
     private PostRepository postRepository;
-
-    @Mock
-    private UserRepository userRepository;
 
     @Mock
     private TagService tagService;
