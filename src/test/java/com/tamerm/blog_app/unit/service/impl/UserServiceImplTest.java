@@ -32,6 +32,9 @@ public class UserServiceImplTest {
     @Mock
     private JWTService jwtService;
 
+    @Mock
+    private BCryptPasswordEncoder passwordEncoder;
+
     @InjectMocks
     private UserServiceImpl userService;
 
@@ -48,7 +51,7 @@ public class UserServiceImplTest {
         user = new User();
         user.setId(1L);
         user.setUsername("testuser");
-        user.setPassword(new BCryptPasswordEncoder().encode("password"));
+        user.setPassword("hashed-password");
         user.setDisplayName("Test User");
 
         createUserRequest = new CreateUserRequest();
@@ -82,6 +85,7 @@ public class UserServiceImplTest {
     void login_ShouldReturnJwtToken() {
         when(userRepository.findByUsername(any(String.class))).thenReturn(Optional.of(user));
         when(jwtService.generateToken(any(User.class))).thenReturn("jwt-token");
+        when(passwordEncoder.matches("password", "hashed-password")).thenReturn(true);
 
         String result = userService.login(loginRequest);
 
@@ -111,6 +115,7 @@ public class UserServiceImplTest {
         when(userRepository.save(any(User.class))).thenReturn(user);
         when(userRepository.findByUsername(any(String.class))).thenReturn(Optional.of(user));
         when(jwtService.generateToken(any(User.class))).thenReturn("jwt-token");
+        when(passwordEncoder.matches("password", "hashed-password")).thenReturn(true);
 
         CreateUserRequest createUserRequest = new CreateUserRequest("testuser", "password", "Test User");
         userService.createUser(createUserRequest);
