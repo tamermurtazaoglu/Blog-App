@@ -42,7 +42,7 @@ public class PostController {
      * @return the created post
      */
     @PostMapping
-    @Operation(summary = "Create a new post", description = "Creates a new post with the given details")
+    @Operation(summary = "Create a new post", description = "Creates a new post for the authenticated user")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Post created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input data"),
@@ -50,9 +50,8 @@ public class PostController {
     })
     public ResponseEntity<PostDTO> createPost(
             @Valid @RequestBody CreatePostRequest request,
-            @RequestParam @Parameter(description = "ID of the user creating the post") Long userId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        PostDTO createdPost = postService.createPost(request, userId, userDetails);
+        PostDTO createdPost = postService.createPost(request, userDetails);
         return new ResponseEntity<>(createdPost, HttpStatus.CREATED);
     }
 
@@ -119,17 +118,17 @@ public class PostController {
      * @return a response entity with no content
      */
     @DeleteMapping("/{postId}")
-    @Operation(summary = "Delete a post by ID", description = "Deletes a post by its ID")
+    @Operation(summary = "Delete a post by ID", description = "Deletes a post owned by the authenticated user")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Post deleted successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Post not found")
     })
     public ResponseEntity<Void> deletePost(
             @PathVariable @Parameter(description = "ID of the post to delete") Long postId,
-            @RequestParam @Parameter(description = "ID of the user who owns the post") Long userId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        postService.deletePost(postId, userId, userDetails);
+        postService.deletePost(postId, userDetails);
         return ResponseEntity.noContent().build();
     }
 
