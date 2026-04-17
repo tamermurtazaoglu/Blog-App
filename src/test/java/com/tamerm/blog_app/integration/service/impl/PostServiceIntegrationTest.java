@@ -82,7 +82,7 @@ public class PostServiceIntegrationTest {
         PostDTO createdPost = postService.createPost(createRequest, userDetails);
 
         UpdatePostRequest updateRequest = new UpdatePostRequest("Updated Integration Test Title", "Updated Integration Test Text", Collections.singletonList("UpdatedTestTag"));
-        PostDTO updatedPost = postService.updatePost(createdPost.getId(), updateRequest);
+        PostDTO updatedPost = postService.updatePost(createdPost.getId(), updateRequest, userDetails);
 
         assertNotNull(updatedPost);
         assertEquals("Updated Integration Test Title", updatedPost.getTitle());

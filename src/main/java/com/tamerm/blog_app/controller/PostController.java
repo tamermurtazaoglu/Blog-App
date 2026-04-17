@@ -96,16 +96,19 @@ public class PostController {
      * @return the updated post
      */
     @PutMapping("/{id}")
-    @Operation(summary = "Update an existing post", description = "Updates an existing post with the given details")
+    @Operation(summary = "Update an existing post", description = "Updates a post owned by the authenticated user")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Post updated successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Post not found")
     })
     public ResponseEntity<PostDTO> updatePost(
             @PathVariable @Parameter(description = "ID of the post to update") Long id,
-            @Valid @RequestBody UpdatePostRequest request) {
-        PostDTO postDTO = postService.updatePost(id, request);
+            @Valid @RequestBody UpdatePostRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        PostDTO postDTO = postService.updatePost(id, request, userDetails);
         return ResponseEntity.ok(postDTO);
     }
 
