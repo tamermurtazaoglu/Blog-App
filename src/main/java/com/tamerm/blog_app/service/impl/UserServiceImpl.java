@@ -30,6 +30,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository userRepository;
     private final JWTService jwtService;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     /**
      * Creates a new user with the given request details.
@@ -43,7 +44,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         log.debug("Creating user with username: {}", request.getUsername());
         User user = new User();
         user.setUsername(request.getUsername());
-        user.setPassword(new BCryptPasswordEncoder().encode(request.getPassword()));
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setDisplayName(request.getDisplayName());
         User savedUser = userRepository.save(user);
 
@@ -75,7 +76,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
 
-        if (new BCryptPasswordEncoder().matches(request.getPassword(), user.getPassword())) {
+        if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             String token = jwtService.generateToken(user);
             log.info("User authenticated successfully with username: {}", request.getUsername());
 

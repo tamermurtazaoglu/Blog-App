@@ -55,9 +55,9 @@ class PostControllerTest {
     @Test
     void createPost_ShouldReturnCreatedPost() {
         CreatePostRequest request = new CreatePostRequest("Test Title", "Test Text", Collections.emptyList());
-        Mockito.when(postService.createPost(any(CreatePostRequest.class), anyLong(), isNull())).thenReturn(postDTO);
+        Mockito.when(postService.createPost(any(CreatePostRequest.class), isNull())).thenReturn(postDTO);
 
-        ResponseEntity<PostDTO> response = postController.createPost(request, 1L, null);
+        ResponseEntity<PostDTO> response = postController.createPost(request, null);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals("Test Title", response.getBody().getTitle());
@@ -109,9 +109,9 @@ class PostControllerTest {
     @Test
     void updatePost_ShouldReturnUpdatedPost() {
         UpdatePostRequest request = new UpdatePostRequest("Updated Title", "Updated Text", Collections.emptyList());
-        Mockito.when(postService.updatePost(anyLong(), any(UpdatePostRequest.class))).thenReturn(postDTO);
+        Mockito.when(postService.updatePost(anyLong(), any(UpdatePostRequest.class), isNull())).thenReturn(postDTO);
 
-        ResponseEntity<PostDTO> response = postController.updatePost(1L, request);
+        ResponseEntity<PostDTO> response = postController.updatePost(1L, request, null);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Test Title", response.getBody().getTitle());
@@ -122,7 +122,7 @@ class PostControllerTest {
      */
     @Test
     void deletePost_ShouldReturnNoContent() {
-        ResponseEntity<Void> response = postController.deletePost(1L, 1L, null);
+        ResponseEntity<Void> response = postController.deletePost(1L, null);
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
     }

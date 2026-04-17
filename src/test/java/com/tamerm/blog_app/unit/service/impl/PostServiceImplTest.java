@@ -4,11 +4,11 @@ import com.tamerm.blog_app.dto.PostDTO;
 import com.tamerm.blog_app.dto.PostSummaryDTO;
 import com.tamerm.blog_app.exception.BadRequestException;
 import com.tamerm.blog_app.exception.ResourceNotFoundException;
+import com.tamerm.blog_app.exception.UnauthorizedException;
 import com.tamerm.blog_app.model.Post;
 import com.tamerm.blog_app.model.Tag;
 import com.tamerm.blog_app.model.User;
 import com.tamerm.blog_app.repository.PostRepository;
-import com.tamerm.blog_app.repository.UserRepository;
 import com.tamerm.blog_app.request.CreatePostRequest;
 import com.tamerm.blog_app.request.UpdatePostRequest;
 import com.tamerm.blog_app.service.TagService;
@@ -39,9 +39,6 @@ class PostServiceImplTest {
 
     @Mock
     private PostRepository postRepository;
-
-    @Mock
-    private UserRepository userRepository;
 
     @Mock
     private TagService tagService;
@@ -80,12 +77,11 @@ class PostServiceImplTest {
      */
     @Test
     void createPost_ShouldReturnCreatedPost() {
-        when(userRepository.findById(any(Long.class))).thenReturn(Optional.of(user));
         when(modelMapper.map(any(CreatePostRequest.class), eq(Post.class))).thenReturn(post);
         when(postRepository.save(any(Post.class))).thenReturn(post);
         when(modelMapper.map(any(Post.class), eq(PostDTO.class))).thenReturn(postDTO);
 
-        PostDTO result = postService.createPost(createPostRequest, user.getId(), null);
+        PostDTO result = postService.createPost(createPostRequest, user);
 
         assertNotNull(result);
         assertEquals(postDTO.getTitle(), result.getTitle());
@@ -99,7 +95,7 @@ class PostServiceImplTest {
     void createPost_ShouldThrowBadRequestException_WhenTitleIsEmpty() {
         createPostRequest.setTitle("");
 
-        assertThrows(BadRequestException.class, () -> postService.createPost(createPostRequest, user.getId(), null));
+        assertThrows(BadRequestException.class, () -> postService.createPost(createPostRequest, user));
     }
 
     /**
@@ -109,7 +105,7 @@ class PostServiceImplTest {
     void createPost_ShouldThrowBadRequestException_WhenTitleIsNull() {
         createPostRequest.setTitle(null);
 
-        assertThrows(BadRequestException.class, () -> postService.createPost(createPostRequest, user.getId(), null));
+        assertThrows(BadRequestException.class, () -> postService.createPost(createPostRequest, user));
     }
 
     /**
@@ -119,13 +115,12 @@ class PostServiceImplTest {
     void createPost_ShouldHandleTagsProperly() {
         createPostRequest.setTags(List.of("tag1", "tag2"));
         Set<Tag> tags = Set.of(new Tag("tag1"), new Tag("tag2"));
-        when(userRepository.findById(any(Long.class))).thenReturn(Optional.of(user));
         when(tagService.getOrCreateTags(anyList())).thenReturn(tags);
         when(modelMapper.map(any(CreatePostRequest.class), eq(Post.class))).thenReturn(post);
         when(postRepository.save(any(Post.class))).thenReturn(post);
         when(modelMapper.map(any(Post.class), eq(PostDTO.class))).thenReturn(postDTO);
 
-        PostDTO result = postService.createPost(createPostRequest, user.getId(), null);
+        PostDTO result = postService.createPost(createPostRequest, user);
 
         assertNotNull(result);
         assertEquals(postDTO.getTitle(), result.getTitle());
@@ -180,7 +175,7 @@ class PostServiceImplTest {
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
         updatePostRequest.setTitle(null);
 
-        assertThrows(BadRequestException.class, () -> postService.updatePost(1L, updatePostRequest));
+        assertThrows(BadRequestException.class, () -> postService.updatePost(1L, updatePostRequest, user));
     }
 
     /**
@@ -190,7 +185,18 @@ class PostServiceImplTest {
     void updatePost_ShouldThrowResourceNotFoundException_WhenPostDoesNotExist() {
         when(postRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> postService.updatePost(1L, updatePostRequest));
+        assertThrows(ResourceNotFoundException.class, () -> postService.updatePost(1L, updatePostRequest, user));
+    }
+
+    /**
+     * Tests that an UnauthorizedException is thrown when the user does not own the post.
+     */
+    @Test
+    void updatePost_ShouldThrowUnauthorizedException_WhenUserDoesNotOwnPost() {
+        User otherUser = User.builder().id(99L).username("other").password("pw").build();
+        when(postRepository.findById(1L)).thenReturn(Optional.of(post));
+
+        assertThrows(UnauthorizedException.class, () -> postService.updatePost(1L, updatePostRequest, otherUser));
     }
 
     /**
@@ -200,7 +206,7 @@ class PostServiceImplTest {
     void deletePost_ShouldDeletePost_WhenPostExists() {
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
 
-        postService.deletePost(1L, 1L, null);
+        postService.deletePost(1L, user);
 
         verify(postRepository, times(1)).delete(post);
     }
@@ -210,9 +216,9 @@ class PostServiceImplTest {
      */
     @Test
     void deletePost_ShouldThrowResourceNotFoundException_WhenPostDoesNotExist() {
-        lenient().when(postRepository.findByIdAndUserId(1L, 1L)).thenReturn(Optional.empty());
+        when(postRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> postService.deletePost(1L, 1L, null));
+        assertThrows(ResourceNotFoundException.class, () -> postService.deletePost(1L, user));
     }
 
     /**

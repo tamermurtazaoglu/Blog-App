@@ -9,7 +9,6 @@ import com.tamerm.blog_app.model.Post;
 import com.tamerm.blog_app.model.Tag;
 import com.tamerm.blog_app.model.User;
 import com.tamerm.blog_app.repository.PostRepository;
-import com.tamerm.blog_app.repository.UserRepository;
 import com.tamerm.blog_app.request.CreatePostRequest;
 import com.tamerm.blog_app.request.UpdatePostRequest;
 import com.tamerm.blog_app.service.PostService;
@@ -36,7 +35,6 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final TagService tagService;
     private final ModelMapper modelMapper;
-    private final UserRepository userRepository;
 
     /**
      * Creates a new post.
@@ -49,8 +47,9 @@ public class PostServiceImpl implements PostService {
      */
     @Transactional
     @Override
-    public PostDTO createPost(CreatePostRequest request, Long userId, UserDetails userDetails) {
-        log.debug("Creating post for userId: {}", userId);
+    public PostDTO createPost(CreatePostRequest request, UserDetails userDetails) {
+        User user = (User) userDetails;
+        log.debug("Creating post for userId: {}", user.getId());
         if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
             log.error("Post title cannot be empty");
             throw new BadRequestException("Post title cannot be empty");
@@ -63,8 +62,6 @@ public class PostServiceImpl implements PostService {
             post.setTags(tags);
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + userId));
         post.setUser(user);
 
         Post savedPost = postRepository.save(post);
@@ -117,18 +114,22 @@ public class PostServiceImpl implements PostService {
      */
     @Transactional
     @Override
-    public PostDTO updatePost(Long id, UpdatePostRequest request) {
+    public PostDTO updatePost(Long id, UpdatePostRequest request, UserDetails userDetails) {
+        User user = (User) userDetails;
         log.debug("Updating post with id: {}", id);
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
+
+        if (!post.getUser().getId().equals(user.getId())) {
+            log.error("User not authorized to update this post");
+            throw new UnauthorizedException("User not authorized to update this post");
+        }
 
         if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
             log.error("Post title cannot be empty");
             throw new BadRequestException("Post title cannot be empty");
         }
 
-        modelMapper.typeMap(UpdatePostRequest.class, Post.class)
-                .addMappings(mapper -> mapper.skip(Post::setTags));
         modelMapper.map(request, post);
 
         if (request.getTags() != null) {
@@ -162,12 +163,13 @@ public class PostServiceImpl implements PostService {
      */
     @Transactional
     @Override
-    public void deletePost(Long postId, Long userId, UserDetails userDetails) {
+    public void deletePost(Long postId, UserDetails userDetails) {
+        User user = (User) userDetails;
         log.debug("Deleting post with id: {}", postId);
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id " + postId));
 
-        if (!post.getUser().getId().equals(userId)) {
+        if (!post.getUser().getId().equals(user.getId())) {
             log.error("User not authorized to delete this post");
             throw new UnauthorizedException("User not authorized to delete this post");
         }

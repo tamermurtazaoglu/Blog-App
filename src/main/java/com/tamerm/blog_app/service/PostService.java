@@ -9,10 +9,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.List;
 
 public interface PostService {
-    PostDTO createPost(CreatePostRequest request, Long userId, UserDetails userDetails);
+    PostDTO createPost(CreatePostRequest request, UserDetails userDetails);
     List<PostSummaryDTO> getAllPosts();
     PostDTO getPostById(Long id);
-    PostDTO updatePost(Long id, UpdatePostRequest request);
-    void deletePost(Long postId, Long userId, UserDetails userDetails);
+    PostDTO updatePost(Long id, UpdatePostRequest request, UserDetails userDetails);
+    void deletePost(Long postId, UserDetails userDetails);
     List<PostSummaryDTO> getPostsByTagName(String tagName);
 }

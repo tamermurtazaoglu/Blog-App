@@ -42,7 +42,7 @@ public class PostController {
      * @return the created post
      */
     @PostMapping
-    @Operation(summary = "Create a new post", description = "Creates a new post with the given details")
+    @Operation(summary = "Create a new post", description = "Creates a new post for the authenticated user")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Post created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input data"),
@@ -50,9 +50,8 @@ public class PostController {
     })
     public ResponseEntity<PostDTO> createPost(
             @Valid @RequestBody CreatePostRequest request,
-            @RequestParam @Parameter(description = "ID of the user creating the post") Long userId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        PostDTO createdPost = postService.createPost(request, userId, userDetails);
+        PostDTO createdPost = postService.createPost(request, userDetails);
         return new ResponseEntity<>(createdPost, HttpStatus.CREATED);
     }
 
@@ -97,16 +96,19 @@ public class PostController {
      * @return the updated post
      */
     @PutMapping("/{id}")
-    @Operation(summary = "Update an existing post", description = "Updates an existing post with the given details")
+    @Operation(summary = "Update an existing post", description = "Updates a post owned by the authenticated user")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Post updated successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Post not found")
     })
     public ResponseEntity<PostDTO> updatePost(
             @PathVariable @Parameter(description = "ID of the post to update") Long id,
-            @Valid @RequestBody UpdatePostRequest request) {
-        PostDTO postDTO = postService.updatePost(id, request);
+            @Valid @RequestBody UpdatePostRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        PostDTO postDTO = postService.updatePost(id, request, userDetails);
         return ResponseEntity.ok(postDTO);
     }
 
@@ -119,17 +121,17 @@ public class PostController {
      * @return a response entity with no content
      */
     @DeleteMapping("/{postId}")
-    @Operation(summary = "Delete a post by ID", description = "Deletes a post by its ID")
+    @Operation(summary = "Delete a post by ID", description = "Deletes a post owned by the authenticated user")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Post deleted successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Post not found")
     })
     public ResponseEntity<Void> deletePost(
             @PathVariable @Parameter(description = "ID of the post to delete") Long postId,
-            @RequestParam @Parameter(description = "ID of the user who owns the post") Long userId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        postService.deletePost(postId, userId, userDetails);
+        postService.deletePost(postId, userDetails);
         return ResponseEntity.noContent().build();
     }
 
