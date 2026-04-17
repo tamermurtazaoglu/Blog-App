@@ -30,8 +30,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**", "/users/login", "/users/create", "/users/logout").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/posts/**").authenticated() // Require authentication for DELETE requests
-                        .requestMatchers("/posts/**").permitAll() // Allow unauthenticated access to other post endpoints
+                        .requestMatchers(HttpMethod.POST, "/posts/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/posts/**").authenticated()
+                        .requestMatchers("/posts/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))

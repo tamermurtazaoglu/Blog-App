@@ -2,9 +2,7 @@ package com.tamerm.blog_app.integration.service.impl;
 
 import com.tamerm.blog_app.BlogApplication;
 import com.tamerm.blog_app.dto.PostDTO;
-import com.tamerm.blog_app.dto.UserDTO;
 import com.tamerm.blog_app.exception.ResourceNotFoundException;
-import com.tamerm.blog_app.model.User;
 import com.tamerm.blog_app.request.CreatePostRequest;
 import com.tamerm.blog_app.request.CreateUserRequest;
 import com.tamerm.blog_app.request.UpdatePostRequest;
@@ -14,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,12 +35,16 @@ public class PostServiceIntegrationTest {
     @Autowired
     private UserService userService;
 
-    private UserDTO user;
+    @Autowired
+    private UserDetailsService userDetailsService;
+
+    private UserDetails userDetails;
 
     @BeforeEach
     void setUp() {
         CreateUserRequest createUserRequest = new CreateUserRequest("testuser", "password", "testuser@example.com");
-        user = userService.createUser(createUserRequest);
+        userService.createUser(createUserRequest);
+        userDetails = userDetailsService.loadUserByUsername("testuser");
     }
 
     /**
@@ -49,7 +53,7 @@ public class PostServiceIntegrationTest {
     @Test
     void createPost_ShouldReturnCreatedPost() {
         CreatePostRequest request = new CreatePostRequest("Integration Test Title", "Integration Test Text", Collections.singletonList("TestTag"));
-        PostDTO createdPost = postService.createPost(request, user.getId(), null);
+        PostDTO createdPost = postService.createPost(request, userDetails);
 
         assertNotNull(createdPost);
         assertEquals("Integration Test Title", createdPost.getTitle());
@@ -61,7 +65,7 @@ public class PostServiceIntegrationTest {
     @Test
     void getPostById_ShouldReturnPost() {
         CreatePostRequest request = new CreatePostRequest("Integration Test Title", "Integration Test Text", Collections.singletonList("TestTag"));
-        PostDTO createdPost = postService.createPost(request, user.getId(),  null);
+        PostDTO createdPost = postService.createPost(request, userDetails);
 
         PostDTO retrievedPost = postService.getPostById(createdPost.getId());
 
@@ -75,7 +79,7 @@ public class PostServiceIntegrationTest {
     @Test
     void updatePost_ShouldReturnUpdatedPost() {
         CreatePostRequest createRequest = new CreatePostRequest("Integration Test Title", "Integration Test Text", Collections.singletonList("TestTag"));
-        PostDTO createdPost = postService.createPost(createRequest, user.getId(), null);
+        PostDTO createdPost = postService.createPost(createRequest, userDetails);
 
         UpdatePostRequest updateRequest = new UpdatePostRequest("Updated Integration Test Title", "Updated Integration Test Text", Collections.singletonList("UpdatedTestTag"));
         PostDTO updatedPost = postService.updatePost(createdPost.getId(), updateRequest);
@@ -90,9 +94,9 @@ public class PostServiceIntegrationTest {
     @Test
     void deletePost_ShouldRemovePost() {
         CreatePostRequest request = new CreatePostRequest("Integration Test Title", "Integration Test Text", Collections.singletonList("TestTag"));
-        PostDTO createdPost = postService.createPost(request, user.getId(), null);
+        PostDTO createdPost = postService.createPost(request, userDetails);
 
-        postService.deletePost(createdPost.getId(), user.getId(),  null);
+        postService.deletePost(createdPost.getId(), userDetails);
 
         assertThrows(ResourceNotFoundException.class, () -> postService.getPostById(createdPost.getId()));
     }
