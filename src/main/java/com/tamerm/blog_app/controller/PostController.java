@@ -143,6 +143,27 @@ public class PostController {
      * @param tagName the name of the tag
      * @return a list of posts with the specified tag name
      */
+    /**
+     * Search posts by a free-text query (word, sentence, or tag).
+     *
+     * @param q    the search query
+     * @param page page number (0-based)
+     * @param size page size
+     * @return paginated search results
+     */
+    @GetMapping("/search")
+    @Operation(summary = "Search posts", description = "Full-text search across post title, text and tags")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Search results retrieved successfully")
+    })
+    public ResponseEntity<Page<PostSummaryDTO>> searchPosts(
+            @RequestParam @Parameter(description = "Search query (word, sentence, or tag)") String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<PostSummaryDTO> results = postService.searchPosts(q, PageRequest.of(page, size));
+        return ResponseEntity.ok(results);
+    }
+
     @GetMapping("/byTag/{tagName}")
     @Operation(summary = "Get posts by tag name", description = "Retrieves a paginated list of posts with the specified tag name")
     @ApiResponses({

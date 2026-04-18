@@ -13,10 +13,15 @@ import com.tamerm.blog_app.request.CreatePostRequest;
 import com.tamerm.blog_app.request.UpdatePostRequest;
 import com.tamerm.blog_app.service.PostService;
 import com.tamerm.blog_app.service.TagService;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.search.loading.dsl.SearchLoadingOptionsStep;
+import org.hibernate.search.engine.search.query.SearchResult;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -37,6 +42,7 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final TagService tagService;
     private final ModelMapper modelMapper;
+    private final EntityManager entityManager;
 
     /**
      * Creates a new post.
@@ -185,6 +191,36 @@ public class PostServiceImpl implements PostService {
      * @param tagName the name of the tag
      * @return a list of posts with the specified tag name
      */
+    /**
+     * Searches posts by full-text query across title, text, and tag names.
+     *
+     * @param query    the search query (word, sentence, or tag)
+     * @param pageable pagination parameters
+     * @return a page of matching post summaries
+     */
+    @Override
+    public Page<PostSummaryDTO> searchPosts(String query, Pageable pageable) {
+        log.debug("Searching posts with query: '{}', page={}, size={}", query, pageable.getPageNumber(), pageable.getPageSize());
+        SearchResult<Post> result = Search.session(entityManager)
+                .search(Post.class)
+                .where(f -> f.simpleQueryString()
+                        .fields("title", "text", "tags.name")
+                        .matching(query))
+                .fetch((int) pageable.getOffset(), pageable.getPageSize());
+
+        List<PostSummaryDTO> content = result.hits().stream()
+                .map(post -> new PostSummaryDTO(
+                        post.getTitle(),
+                        (post.getText() != null && !post.getText().isEmpty())
+                                ? post.getText().substring(0, Math.min(post.getText().length(), 50)) + "..."
+                                : "No content available"
+                ))
+                .collect(Collectors.toList());
+
+        log.info("Search for '{}' returned {} total hits", query, result.total().hitCount());
+        return new PageImpl<>(content, pageable, result.total().hitCount());
+    }
+
     @Override
     public Page<PostSummaryDTO> getPostsByTagName(String tagName, Pageable pageable) {
         log.debug("Retrieving posts with tag: {}, page={}, size={}", tagName, pageable.getPageNumber(), pageable.getPageSize());

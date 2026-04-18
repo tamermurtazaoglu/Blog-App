@@ -15,4 +15,5 @@ public interface PostService {
     PostDTO updatePost(Long id, UpdatePostRequest request, UserDetails userDetails);
     void deletePost(Long postId, UserDetails userDetails);
     Page<PostSummaryDTO> getPostsByTagName(String tagName, Pageable pageable);
+    Page<PostSummaryDTO> searchPosts(String query, Pageable pageable);
 }

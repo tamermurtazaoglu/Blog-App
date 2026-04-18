@@ -29,6 +29,7 @@ import java.util.List;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -142,5 +143,31 @@ class PostControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Test Title", response.getBody().getContent().get(0).getTitle());
+    }
+
+    /**
+     * Tests that full-text search returns matching posts.
+     */
+    @Test
+    void searchPosts_ShouldReturnMatchingPosts() {
+        Mockito.when(postService.searchPosts("test", PageRequest.of(0, 10))).thenReturn(new PageImpl<>(List.of(postSummaryDTO)));
+
+        ResponseEntity<Page<PostSummaryDTO>> response = postController.searchPosts("test", 0, 10);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Test Title", response.getBody().getContent().get(0).getTitle());
+    }
+
+    /**
+     * Tests that an empty page is returned when no posts match the search query.
+     */
+    @Test
+    void searchPosts_ShouldReturnEmptyPage_WhenNoMatches() {
+        Mockito.when(postService.searchPosts("nomatch", PageRequest.of(0, 10))).thenReturn(Page.empty());
+
+        ResponseEntity<Page<PostSummaryDTO>> response = postController.searchPosts("nomatch", 0, 10);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody().isEmpty());
     }
 }
