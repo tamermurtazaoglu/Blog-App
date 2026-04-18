@@ -15,7 +15,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -64,11 +65,11 @@ public class PostRepositoryIntegrationTest {
         postRepository.save(post);
 
         // Fetch posts by tag name
-        List<Post> posts = postRepository.findAllByTags_Name("testtag");
+        Page<Post> posts = postRepository.findAllByTags_Name("testtag", PageRequest.of(0, 10));
 
         // Assert that the posts list is not empty and contains the created post
         assertFalse(posts.isEmpty());
-        assertTrue(posts.contains(post));
+        assertTrue(posts.getContent().contains(post));
     }
 
     /**
@@ -76,7 +77,7 @@ public class PostRepositoryIntegrationTest {
      */
     @Test
     void findAllByTags_Name_ShouldReturnEmptyList_WhenNoPostsWithTag() {
-        List<Post> posts = postRepository.findAllByTags_Name("nonexistentTag");
+        Page<Post> posts = postRepository.findAllByTags_Name("nonexistentTag", PageRequest.of(0, 10));
 
         assertNotNull(posts);
         assertTrue(posts.isEmpty());

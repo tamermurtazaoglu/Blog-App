@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -18,4 +19,5 @@ public class PostDTO {
     private String title;
     private String text;
     private Set<Tag> tags;
+    private List<MediaDTO> mediaFiles;
 }

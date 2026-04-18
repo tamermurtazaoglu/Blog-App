@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -117,11 +120,11 @@ class PostRepositoryTest {
         post.setUser(user);
         postRepository.save(post);
 
-        List<Post> posts = postRepository.findAllByTags_Name("tag1");
+        Page<Post> posts = postRepository.findAllByTags_Name("tag1", PageRequest.of(0, 10));
 
         assertNotNull(posts);
         assertFalse(posts.isEmpty());
-        assertEquals("Test Post", posts.get(0).getTitle());
+        assertEquals("Test Post", posts.getContent().get(0).getTitle());
     }
 
     /**
@@ -129,7 +132,7 @@ class PostRepositoryTest {
      */
     @Test
     void findAllByTags_Name_ShouldReturnEmptyList_WhenNoPostsWithTag() {
-        List<Post> posts = postRepository.findAllByTags_Name("nonexistentTag");
+        Page<Post> posts = postRepository.findAllByTags_Name("nonexistentTag", PageRequest.of(0, 10));
 
         assertNotNull(posts);
         assertTrue(posts.isEmpty());

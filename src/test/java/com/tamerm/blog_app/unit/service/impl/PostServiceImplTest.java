@@ -13,6 +13,7 @@ import com.tamerm.blog_app.request.CreatePostRequest;
 import com.tamerm.blog_app.request.UpdatePostRequest;
 import com.tamerm.blog_app.service.TagService;
 import com.tamerm.blog_app.service.impl.PostServiceImpl;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +22,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeMap;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Collections;
 import java.util.List;
@@ -49,6 +55,9 @@ class PostServiceImplTest {
     @Mock
     private TypeMap<UpdatePostRequest, Post> typeMap;
 
+    @Mock
+    private EntityManager entityManager;
+
     @InjectMocks
     private PostServiceImpl postService;
 
@@ -66,8 +75,8 @@ class PostServiceImplTest {
                 .password("password")
                 .displayName("Test user")
                 .build();
-        post = new Post(1L, "Test Title", "Test Text", user, Collections.emptySet());
-        postDTO = new PostDTO(1L, "Test Title", "Test Text", Collections.emptySet());
+        post = new Post(1L, "Test Title", "Test Text", user, Collections.emptySet(), new java.util.ArrayList<>());
+        postDTO = new PostDTO(1L, "Test Title", "Test Text", Collections.emptySet(), null);
         createPostRequest = new CreatePostRequest("Test Title", "Test Text", Collections.emptyList());
         updatePostRequest = new UpdatePostRequest("Updated Title", "Updated Text", Collections.emptyList());
     }
@@ -133,14 +142,15 @@ class PostServiceImplTest {
      */
     @Test
     void getAllPosts_ShouldReturnAllPosts() {
-        when(postRepository.findAll()).thenReturn(List.of(post));
+        Pageable pageable = PageRequest.of(0, 10);
+        when(postRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(post)));
 
-        List<PostSummaryDTO> result = postService.getAllPosts();
+        Page<PostSummaryDTO> result = postService.getAllPosts(pageable);
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
-        assertEquals("Test Title", result.get(0).getTitle());
-        verify(postRepository, times(1)).findAll();
+        assertEquals("Test Title", result.getContent().get(0).getTitle());
+        verify(postRepository, times(1)).findAll(pageable);
     }
 
     /**
@@ -226,24 +236,26 @@ class PostServiceImplTest {
      */
     @Test
     void getPostsByTagName_ShouldReturnPosts() {
-        when(postRepository.findAllByTags_Name("tag")).thenReturn(List.of(post));
+        Pageable pageable = PageRequest.of(0, 10);
+        when(postRepository.findAllByTags_Name("tag", pageable)).thenReturn(new PageImpl<>(List.of(post)));
 
-        List<PostSummaryDTO> result = postService.getPostsByTagName("tag");
+        Page<PostSummaryDTO> result = postService.getPostsByTagName("tag", pageable);
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
-        assertEquals("Test Title", result.get(0).getTitle());
-        verify(postRepository, times(1)).findAllByTags_Name("tag");
+        assertEquals("Test Title", result.getContent().get(0).getTitle());
+        verify(postRepository, times(1)).findAllByTags_Name("tag", pageable);
     }
 
     /**
-     * Tests that an empty list is returned when no posts with the specified tag name exist.
+     * Tests that an empty page is returned when no posts with the specified tag name exist.
      */
     @Test
-    void getPostsByTagName_ShouldReturnEmptyList_WhenNoPostsWithTag() {
-        when(postRepository.findAllByTags_Name("tag")).thenReturn(Collections.emptyList());
+    void getPostsByTagName_ShouldReturnEmptyPage_WhenNoPostsWithTag() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(postRepository.findAllByTags_Name("tag", pageable)).thenReturn(Page.empty());
 
-        List<PostSummaryDTO> result = postService.getPostsByTagName("tag");
+        Page<PostSummaryDTO> result = postService.getPostsByTagName("tag", pageable);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());

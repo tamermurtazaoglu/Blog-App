@@ -13,13 +13,13 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * REST controller for managing posts.
@@ -61,12 +61,14 @@ public class PostController {
      * @return a list of post summaries
      */
     @GetMapping
-    @Operation(summary = "Get all post summaries", description = "Retrieves a list of all post summaries")
+    @Operation(summary = "Get all post summaries", description = "Retrieves a paginated list of all post summaries")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "List of post summaries retrieved successfully")
     })
-    public ResponseEntity<List<PostSummaryDTO>> getAllPostSummaries() {
-        List<PostSummaryDTO> posts = postService.getAllPosts();
+    public ResponseEntity<Page<PostSummaryDTO>> getAllPostSummaries(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<PostSummaryDTO> posts = postService.getAllPosts(PageRequest.of(page, size));
         return ResponseEntity.ok(posts);
     }
 
@@ -141,14 +143,37 @@ public class PostController {
      * @param tagName the name of the tag
      * @return a list of posts with the specified tag name
      */
+    /**
+     * Search posts by a free-text query (word, sentence, or tag).
+     *
+     * @param q    the search query
+     * @param page page number (0-based)
+     * @param size page size
+     * @return paginated search results
+     */
+    @GetMapping("/search")
+    @Operation(summary = "Search posts", description = "Full-text search across post title, text and tags")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Search results retrieved successfully")
+    })
+    public ResponseEntity<Page<PostSummaryDTO>> searchPosts(
+            @RequestParam @Parameter(description = "Search query (word, sentence, or tag)") String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<PostSummaryDTO> results = postService.searchPosts(q, PageRequest.of(page, size));
+        return ResponseEntity.ok(results);
+    }
+
     @GetMapping("/byTag/{tagName}")
-    @Operation(summary = "Get posts by tag name", description = "Retrieves a list of posts with the specified tag name")
+    @Operation(summary = "Get posts by tag name", description = "Retrieves a paginated list of posts with the specified tag name")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "List of posts retrieved successfully")
     })
-    public ResponseEntity<List<PostSummaryDTO>> getPostsByTag(
-            @PathVariable @Parameter(description = "Name of the tag") String tagName) {
-        List<PostSummaryDTO> posts = postService.getPostsByTagName(tagName);
+    public ResponseEntity<Page<PostSummaryDTO>> getPostsByTag(
+            @PathVariable @Parameter(description = "Name of the tag") String tagName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<PostSummaryDTO> posts = postService.getPostsByTagName(tagName, PageRequest.of(page, size));
         return ResponseEntity.ok(posts);
     }
 }
