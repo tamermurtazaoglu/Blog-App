@@ -13,6 +13,7 @@ import com.tamerm.blog_app.request.CreatePostRequest;
 import com.tamerm.blog_app.request.UpdatePostRequest;
 import com.tamerm.blog_app.service.TagService;
 import com.tamerm.blog_app.service.impl.PostServiceImpl;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,6 +55,9 @@ class PostServiceImplTest {
     @Mock
     private TypeMap<UpdatePostRequest, Post> typeMap;
 
+    @Mock
+    private EntityManager entityManager;
+
     @InjectMocks
     private PostServiceImpl postService;
 
@@ -71,8 +75,8 @@ class PostServiceImplTest {
                 .password("password")
                 .displayName("Test user")
                 .build();
-        post = new Post(1L, "Test Title", "Test Text", user, Collections.emptySet());
-        postDTO = new PostDTO(1L, "Test Title", "Test Text", Collections.emptySet());
+        post = new Post(1L, "Test Title", "Test Text", user, Collections.emptySet(), new java.util.ArrayList<>());
+        postDTO = new PostDTO(1L, "Test Title", "Test Text", Collections.emptySet(), null);
         createPostRequest = new CreatePostRequest("Test Title", "Test Text", Collections.emptyList());
         updatePostRequest = new UpdatePostRequest("Updated Title", "Updated Text", Collections.emptyList());
     }

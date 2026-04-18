@@ -37,7 +37,7 @@ class ModelMapperTest {
      */
     @Test
     void testMapPostToPostDTO() {
-        Post post = new Post(1L, "Test Title", "Test Content", user, new HashSet<>());
+        Post post = new Post(1L, "Test Title", "Test Content", user, new HashSet<>(), new java.util.ArrayList<>());
 
         PostDTO postDTO = modelMapper.map(post, PostDTO.class);
 
@@ -52,7 +52,7 @@ class ModelMapperTest {
      */
     @Test
     void testMapPostDTOToPost() {
-        PostDTO postDTO = new PostDTO(1L, "Test Title", "Test Content", new HashSet<>());
+        PostDTO postDTO = new PostDTO(1L, "Test Title", "Test Content", new HashSet<>(), null);
 
         Post post = modelMapper.map(postDTO, Post.class);
         post.setUser(user); // Set the user manually
@@ -68,7 +68,7 @@ class ModelMapperTest {
      */
     @Test
     void testMapPostToPostSummaryDTO() {
-        Post post = new Post(1L, "Test Title", "Test Content", user, new HashSet<>());
+        Post post = new Post(1L, "Test Title", "Test Content", user, new HashSet<>(), new java.util.ArrayList<>());
 
         PostSummaryDTO postSummaryDTO = modelMapper.map(post, PostSummaryDTO.class);
 
@@ -95,7 +95,7 @@ class ModelMapperTest {
      */
     @Test
     void testMapPostWithNullValues() {
-        Post post = new Post(1L, null, null, user, null);
+        Post post = new Post(1L, null, null, user, null, null);
 
         PostDTO postDTO = modelMapper.map(post, PostDTO.class);
 
