@@ -19,6 +19,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -68,12 +72,12 @@ class PostControllerTest {
      */
     @Test
     void getAllPostSummaries_ShouldReturnAllPosts() {
-        Mockito.when(postService.getAllPosts()).thenReturn(List.of(postSummaryDTO));
+        Mockito.when(postService.getAllPosts(PageRequest.of(0, 10))).thenReturn(new PageImpl<>(List.of(postSummaryDTO)));
 
-        ResponseEntity<List<PostSummaryDTO>> response = postController.getAllPostSummaries();
+        ResponseEntity<Page<PostSummaryDTO>> response = postController.getAllPostSummaries(0, 10);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Test Title", response.getBody().get(0).getTitle());
+        assertEquals("Test Title", response.getBody().getContent().get(0).getTitle());
     }
 
     /**
@@ -132,11 +136,11 @@ class PostControllerTest {
      */
     @Test
     void getPostsByTag_ShouldReturnPosts() {
-        Mockito.when(postService.getPostsByTagName("tag")).thenReturn(List.of(postSummaryDTO));
+        Mockito.when(postService.getPostsByTagName("tag", PageRequest.of(0, 10))).thenReturn(new PageImpl<>(List.of(postSummaryDTO)));
 
-        ResponseEntity<List<PostSummaryDTO>> response = postController.getPostsByTag("tag");
+        ResponseEntity<Page<PostSummaryDTO>> response = postController.getPostsByTag("tag", 0, 10);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Test Title", response.getBody().get(0).getTitle());
+        assertEquals("Test Title", response.getBody().getContent().get(0).getTitle());
     }
 }

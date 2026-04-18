@@ -16,6 +16,8 @@ import com.tamerm.blog_app.service.TagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,16 +77,15 @@ public class PostServiceImpl implements PostService {
      * @return a list of post summaries
      */
     @Override
-    public List<PostSummaryDTO> getAllPosts() {
-        log.debug("Retrieving all posts");
-        return postRepository.findAll().stream()
+    public Page<PostSummaryDTO> getAllPosts(Pageable pageable) {
+        log.debug("Retrieving all posts, page={}, size={}", pageable.getPageNumber(), pageable.getPageSize());
+        return postRepository.findAll(pageable)
                 .map(post -> new PostSummaryDTO(
                         post.getTitle(),
-                        (post.getText() != null && post.getText().length() > 0)
+                        (post.getText() != null && !post.getText().isEmpty())
                                 ? post.getText().substring(0, Math.min(post.getText().length(), 50)) + "..."
                                 : "No content available"
-                ))
-                .collect(Collectors.toList());
+                ));
     }
 
     /**
@@ -185,10 +186,14 @@ public class PostServiceImpl implements PostService {
      * @return a list of posts with the specified tag name
      */
     @Override
-    public List<PostSummaryDTO> getPostsByTagName(String tagName) {
-        log.debug("Retrieving posts with tag: {}", tagName);
-        return postRepository.findAllByTags_Name(tagName).stream()
-                .map(post -> new PostSummaryDTO(post.getTitle(), post.getText().substring(0, Math.min(post.getText().length(), 50)) + "..."))
-                .collect(Collectors.toList());
+    public Page<PostSummaryDTO> getPostsByTagName(String tagName, Pageable pageable) {
+        log.debug("Retrieving posts with tag: {}, page={}, size={}", tagName, pageable.getPageNumber(), pageable.getPageSize());
+        return postRepository.findAllByTags_Name(tagName, pageable)
+                .map(post -> new PostSummaryDTO(
+                        post.getTitle(),
+                        (post.getText() != null && !post.getText().isEmpty())
+                                ? post.getText().substring(0, Math.min(post.getText().length(), 50)) + "..."
+                                : "No content available"
+                ));
     }
 }
