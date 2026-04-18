@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Claude Code ###
+CLAUDE.md
+.claude/
+.env
