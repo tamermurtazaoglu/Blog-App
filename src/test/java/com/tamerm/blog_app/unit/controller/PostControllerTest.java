@@ -50,7 +50,7 @@ class PostControllerTest {
 
     @BeforeEach
     void setUp() {
-        postDTO = new PostDTO(1L, "Test Title", "Test Text", Collections.emptySet());
+        postDTO = new PostDTO(1L, "Test Title", "Test Text", Collections.emptySet(), null);
         postSummaryDTO = new PostSummaryDTO("Test Title", "Test Text...");
     }
 

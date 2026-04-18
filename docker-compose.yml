@@ -1,0 +1,121 @@
+version: '3.9'
+
+services:
+
+  # ── Databases ────────────────────────────────────────────────────────────────
+
+  user-db:
+    image: mysql:9.2.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: user_db
+      MYSQL_USER: useruser
+      MYSQL_PASSWORD: ${USER_DB_PASSWORD}
+    volumes:
+      - user-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  blog-db:
+    image: mysql:9.2.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: blog_db
+      MYSQL_USER: bloguser
+      MYSQL_PASSWORD: ${BLOG_DB_PASSWORD}
+    volumes:
+      - blog-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Kafka ─────────────────────────────────────────────────────────────────────
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ── Microservices ─────────────────────────────────────────────────────────────
+
+  user-service:
+    build: ./services/user-service
+    ports:
+      - "8080:8080"
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${USER_DB_PASSWORD}
+    depends_on:
+      user-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  blog-service:
+    build: ./services/blog-service
+    ports:
+      - "8081:8081"
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      BLOG_DB_PASSWORD: ${BLOG_DB_PASSWORD}
+    volumes:
+      - blog-media:/app/media
+    depends_on:
+      blog-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # ── SonarQube ─────────────────────────────────────────────────────────────────
+
+  sonarqube-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: ${SONAR_DB_PASSWORD:-sonar}
+      POSTGRES_DB: sonarqube
+    volumes:
+      - sonar-db-data:/var/lib/postgresql/data
+
+  sonarqube:
+    image: sonarqube:10.4-community
+    depends_on:
+      - sonarqube-db
+    ports:
+      - "9000:9000"
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/sonarqube
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: ${SONAR_DB_PASSWORD:-sonar}
+    volumes:
+      - sonar-data:/opt/sonarqube/data
+      - sonar-logs:/opt/sonarqube/logs
+
+volumes:
+  user-db-data:
+  blog-db-data:
+  blog-media:
+  sonar-db-data:
+  sonar-data:
+  sonar-logs:
