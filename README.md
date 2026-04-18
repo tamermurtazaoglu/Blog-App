@@ -1,109 +1,121 @@
-# Blog Application
+# Blog App
 
-## Description
+A RESTful Blog API built with Spring Boot, evolved from a monolith into a microservice architecture across four versions.
 
-Blog Application is a backend API designed to manage a blog platform. The project is developed with Spring Boot and
-follows clean architecture, design patterns and SOLID principles. The application will evolve in multiple phases,
-starting with basic blog post management and gradually incorporating user authentication, tagging, logging, and advanced
-features such as microservices and cloud deployment.
+## Architecture
 
-## Structure
+```
+┌─────────────────┐        ┌──────────────────┐
+│   user-service  │        │   blog-service   │
+│   (port 8080)   │        │   (port 8081)    │
+│                 │        │                  │
+│  - Register     │  JWT   │  - Posts (CRUD)  │
+│  - Login        │──────▶ │  - Tags          │
+│  - Delete user  │        │  - Media upload  │
+│                 │        │  - Full-text     │
+│                 │        │    search        │
+└────────┬────────┘        └────────┬─────────┘
+         │                          │
+         │   UserDeletedEvent        │
+         └──────────┬───────────────┘
+                    ▼
+              ┌──────────┐
+              │  Kafka   │
+              └──────────┘
+```
 
-![uml_diagram.png](uml_diagram_v2.png)
+Each service has its own database. Services do not call each other over HTTP. When a user is deleted, `user-service` publishes a `UserDeletedEvent` to Kafka; `blog-service` consumes it and deletes all posts belonging to that user.
 
-## Released Versions
+## Tech Stack
 
-### Version 0.1.0
+| Layer | Technology |
+|---|---|
+| Language | Java 21 |
+| Framework | Spring Boot 3.4.0 |
+| Security | Spring Security + JWT (jjwt 0.11.5) |
+| ORM | Spring Data JPA / Hibernate |
+| Database | H2 (test), MySQL 9.2 (prod) |
+| Messaging | Apache Kafka |
+| Search | Hibernate Search 7.2 + Lucene |
+| Media | Thumbnailator 0.4 (multi-resolution image variants) |
+| Build | Maven |
+| Test | JUnit 5, Mockito, TestContainers |
+| Docs | SpringDoc OpenAPI (Swagger UI) |
+| Code Quality | SonarQube 10.4, JaCoCo 0.8 |
+| Container | Docker, Docker Compose |
+| CI/CD | GitHub Actions, GHCR |
 
-- Create blog posts with a title and text.
-- View a simplified list of all blog posts with title and summary.
-- Update the title and text of blog posts.
-- Add or remove tags from blog posts.
-- Retrieve all blog posts with a specific tag.
-- Use H2 database for initial data setup.
-- Write unit and integration tests.
+## Services
 
-### Version 0.2.0
+### user-service
 
-- Add user management functionality.
-- Implement user authentication using JWT.
-- Allow users to view other users' posts.
-- Enable users to delete their own posts.
-- Add API documentation using Swagger.
-- Implement logging using Logback.
-- Migrate the database to MySQL.
-- Dockerize the application.
+Handles authentication and user lifecycle.
 
-## Planned Versions
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/users/create` | Public | Register |
+| POST | `/users/login` | Public | Login — returns JWT |
+| POST | `/users/logout` | Public | Logout |
+| DELETE | `/users/{id}` | Authenticated | Delete user + publish Kafka event |
 
-### Version 0.3.0
+JWT tokens embed the `userId` claim so `blog-service` can verify post ownership without a user database lookup.
 
-- Add support for images and videos in posts.
-- Implement search and pagination.
-- Integrate Hibernate Search and SonarQube.
+### blog-service
 
-### Version 0.4.0
+Handles all content. Post ownership is tracked by `userId: Long` (no foreign key — users live in a separate database).
 
-- Transition to a microservices architecture.
-- Use Kafka or RabbitMQ for inter-service communication.
-- Implement CI/CD pipelines.
-- Deploy the application to the cloud.
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/posts` | Public | All posts (paginated) |
+| GET | `/posts/{id}` | Public | Post detail |
+| GET | `/posts/byTag/{tag}` | Public | Posts by tag (paginated) |
+| GET | `/posts/search?q=` | Public | Full-text search |
+| POST | `/posts` | Authenticated | Create post |
+| PUT | `/posts/{id}` | Authenticated | Update post (owner only) |
+| DELETE | `/posts/{id}` | Authenticated | Delete post (owner only) |
+| POST | `/posts/{id}/media` | Authenticated | Upload image/video |
+| DELETE | `/posts/{id}/media/{groupId}` | Authenticated | Delete media |
+| GET | `/media/{id}` | Public | Download media file |
 
-## Setup Instructions
+Image uploads are stored in four resolution variants (ORIGINAL, LARGE 1280px, MEDIUM 640px, SMALL 320px) using Thumbnailator. All variants share a `groupId` for batch deletion.
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/tamermurtazaoglu/Blog-App.git
-   ```
+## Running Locally
 
-2. **Navigate to the project directory**
-   ```bash
-   cd Blog-App
-   ```
+### With Docker Compose
 
-3. **Set up the database**
-   - **For H2 (default for development)**: No additional setup is required.
-   - **For MySQL (production)**: Ensure you have MySQL installed and running. Update the `application.properties` file with your MySQL database credentials.
+```bash
+cp .env.example .env
+# Fill in the values in .env
+docker compose up -d
+```
 
+- user-service: http://localhost:8080/swagger-ui/index.html
+- blog-service:  http://localhost:8081/swagger-ui/index.html
+- SonarQube:     http://localhost:9000
 
-4. **Run the application**
-   ```bash
-   mvn spring-boot:run
-   ```
+### Without Docker (H2, test profile)
 
-5. **Run the tests**
-   ```bash
-   mvn test
-   ```
+```bash
+# user-service
+cd services/user-service
+mvn spring-boot:run
 
-6. **(Optional) Build the Docker image**
-   ```bash
-   docker build -t blog-app .
-   ```
+# blog-service
+cd services/blog-service
+mvn spring-boot:run
+```
 
-7. **(Optional) Run the application using Docker**
-   ```bash
-   docker-compose -f src/main/resources/docker-compose.yml up
-   ```
+## CI/CD
 
-## Technical Features
+GitHub Actions runs tests for both services on every PR and push.  
+On merge to `main`, Docker images are built and pushed to GHCR.
 
-- Java 21
-- Spring Boot
-- Spring Security
-- Maven or Gradle
-- H2 and MySQL databases
-- Docker
-- JWT (JSON Web Token)
-- Swagger
-- Logback
-- TestContainers
-- Hibernate Search
-- Elasticsearch
-- SonarQube
-- RabbitMQ
-- CI/CD Pipelines
-- Cloud Deployment
+## Project Evolution
 
-
-
+| Version | What was added |
+|---|---|
+| v0.1.0 | Monolith — Users, Posts, Tags, JWT auth |
+| v0.2.0 | Docker, MySQL, Spring profiles |
+| fix/v0.2.0 | Security hardening (JWT key, ownership checks, BCrypt singleton) |
+| v0.3.0 | Pagination, SonarQube/JaCoCo, Hibernate Search, Media upload |
+| v0.4.0 | Microservice split, Kafka event-driven delete, GitHub Actions CI/CD |
